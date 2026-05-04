@@ -76,7 +76,7 @@ The rest of this report is organized as follows. Chapter 2 presents a literature
 
 \chapter{Literature Review}
 \section{Review of Existing Work}
-O’Shea and West introduced the RadioML dataset generation framework using GNU Radio and established a standard benchmark for modulation recognition tasks\cite{oshea2016dataset}. O’Shea \textit{et al.} proposed early CNN architectures for modulation recognition and demonstrated that convolutional models can learn directly from I/Q samples\cite{oshea2016cnn}. Later studies evaluated deep learning models for wireless signal classification in practical sensing scenarios and showed improved accuracy with larger and more diverse datasets\cite{rajendran2018dl}. PyTorch has become a widely used framework for prototyping such models due to its flexibility and efficient GPU/CPU execution\cite{pytorchdocs}.
+O’Shea and West introduced the RadioML dataset generation framework using GNU Radio and established a standard benchmark for modulation recognition tasks\cite{oshea2016dataset}. O’Shea \textit{et al.} proposed early CNN architectures for modulation recognition and demonstrated that convolutional models can learn directly from I/Q samples\cite{oshea2016cnn}. Subsequent work explored over-the-air deep learning for radio signal classification in more realistic scenarios\cite{oshea2018ota}. Later studies evaluated deep learning models for wireless signal classification in practical sensing scenarios and showed improved accuracy with larger and more diverse datasets\cite{rajendran2018dl}. PyTorch has become a widely used framework for prototyping such models due to its flexibility and efficient GPU/CPU execution\cite{pytorchdocs}.
 
 \section{Research Gap}
 Existing literature demonstrates strong results with CNN-based AMC, but challenges remain in achieving robust performance across low-SNR regimes and in distinguishing closely related modulation families. Many studies also rely on deeper or more complex architectures, which can reduce interpretability and increase computational cost. This project addresses the gap by implementing a simple, interpretable baseline CNN and analyzing its behavior across SNR values to understand performance trends and confusion patterns.
@@ -161,8 +161,8 @@ PyTorch, “PyTorch Documentation,” [Online]. Available: \url{https://pytorch.
 \bibitem{rajendran2018dl}
 S. Rajendran \textit{et al.}, “Deep Learning Models for Wireless Signal Classification with Distributed Low-Cost Spectrum Sensors,” \textit{IEEE Transactions on Cognitive Communications and Networking}, 2018.
 
-\bibitem{ieeeamc}
-Relevant IEEE articles on AMC and deep neural network based signal classification.
+\bibitem{oshea2018ota}
+T. J. O’Shea, T. Roy, and T. C. Clancy, “Over-the-Air Deep Learning Based Radio Signal Classification,” \textit{IEEE Journal of Selected Topics in Signal Processing}, 2018.
 \end{thebibliography}
 
 \end{document}
