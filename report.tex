@@ -21,6 +21,7 @@
 
     {\large \textbf{Department of Electronics and Communication Engineering}\\
     \textbf{Sardar Vallabhbhai National Institute of Technology (SVNIT), Surat}\\
+    \textbf{Academic Year 2025--26}\\
     \textbf{May 2026}}\\[1.2cm]
 
     {\large \textbf{Submitted by}\\
@@ -49,15 +50,16 @@ This is to certify that the project report titled \textbf{``Automatic Modulation
 \begin{tabular}{p{0.45\textwidth} p{0.45\textwidth}}
 \textbf{Dr. Golak Santra} & \textbf{Head, ECE Department} \\
 Project Guide & SVNIT, Surat \\
+\textbf{Signature:} \rule{5cm}{0.4pt} & \textbf{Signature:} \rule{5cm}{0.4pt} \\
 \end{tabular}
 
 \vspace{1.5cm}
 \noindent
-\textbf{External Examiner} \hfill \textbf{Date: May 2026}
+\textbf{External Examiner} \hfill \textbf{Signature:} \rule{5cm}{0.4pt}
 
 \vspace{0.5cm}
 \noindent
-\textbf{Place: Surat}
+\textbf{Date: May 2026} \hfill \textbf{Place: Surat}
 
 % --------------------
 % Declaration
@@ -69,9 +71,9 @@ We hereby declare that the work presented in this report is original and has bee
 \vspace{2cm}
 \noindent
 \begin{tabular}{p{0.6\textwidth} p{0.3\textwidth}}
-\textbf{Virav Vanani (U23EC182)} & \\
-\textbf{Surendra Gamit (U23EC195)} & \\
-\textbf{Hari Gupta (U23EC166)} & \\
+\textbf{Virav Vanani (U23EC182)} & \textbf{Signature:} \rule{4cm}{0.4pt} \\
+\textbf{Surendra Gamit (U23EC195)} & \textbf{Signature:} \rule{4cm}{0.4pt} \\
+\textbf{Hari Gupta (U23EC166)} & \textbf{Signature:} \rule{4cm}{0.4pt} \\
 \end{tabular}
 
 \vspace{1cm}
@@ -81,8 +83,8 @@ We hereby declare that the work presented in this report is original and has bee
 % --------------------
 % Acknowledgement
 % --------------------
-\chapter*{Acknowledgement}
-\addcontentsline{toc}{chapter}{Acknowledgement}
+\chapter*{Acknowledgment}
+\addcontentsline{toc}{chapter}{Acknowledgment}
 We express our sincere gratitude to our project guide, Dr. Golak Santra, for his valuable guidance, continuous support, and constructive suggestions throughout this project. We are thankful to the faculty of the Department of Electronics and Communication Engineering, SVNIT, for providing the necessary academic environment and resources. We also thank our institute for encouraging project-based learning and research. Finally, we acknowledge the teamwork and dedication of all group members in completing this project successfully.
 
 % --------------------
@@ -90,7 +92,7 @@ We express our sincere gratitude to our project guide, Dr. Golak Santra, for his
 % --------------------
 \chapter*{Abstract}
 \addcontentsline{toc}{chapter}{Abstract}
-Automatic modulation classification (AMC) is a key function in intelligent receivers and spectrum monitoring systems. This project presents a baseline convolutional neural network (CNN) for classifying modulation types directly from raw I/Q samples using the RadioML 2016 dataset. The dataset provides labeled signals across multiple modulation schemes and signal-to-noise ratio (SNR) conditions. The proposed approach performs per-sample power normalization, encodes modulation labels, and trains a 1D CNN on I/Q sequences of length 128. The model is trained with AdamW optimization and evaluated using accuracy curves, confusion matrices, and SNR-wise performance analysis. The overall test accuracy achieved is approximately 0.574, with performance improving at higher SNRs and common confusions among closely related modulation families. The results confirm that CNNs are effective for AMC on raw I/Q data while highlighting the sensitivity to SNR distribution and modulation similarity.
+Automatic modulation classification (AMC) is a key function in intelligent receivers and spectrum monitoring systems. This project presents a baseline convolutional neural network (CNN) for classifying modulation types directly from raw I/Q samples using the RadioML 2016 dataset. The dataset provides labeled signals across multiple modulation schemes and signal-to-noise ratio (SNR) conditions, enabling evaluation of both low- and high-SNR regimes. The proposed approach performs per-sample power normalization, encodes modulation labels, and trains a 1D CNN on I/Q sequences of length 128 with a stratified train/validation/test split. The model is optimized with AdamW and assessed using accuracy curves, confusion matrices, and SNR-wise performance analysis. The overall test accuracy achieved is approximately 0.574, with performance improving at higher SNRs and common confusions among closely related modulation families. The results confirm that CNNs are effective for AMC on raw I/Q data while highlighting the sensitivity to SNR distribution and modulation similarity, motivating future improvements in architecture and data augmentation.
 
 \tableofcontents
 \listoffigures
@@ -131,6 +133,18 @@ The RadioML 2016 dataset provides labeled I/Q samples for multiple modulation sc
 
 \section{Preprocessing and Data Split}
 All samples are converted to float32 and normalized using per-sample power normalization to stabilize training. A stratified split by modulation and SNR is used to form train/validation/test sets in a 70/15/15 ratio.
+Figure~\ref{fig:amc-pipeline} summarizes the end-to-end pipeline from raw samples to predicted modulation labels.
+
+\begin{figure}[H]
+    \centering
+    \fbox{
+        \begin{tabular}{c c c c c c c}
+            \textbf{Raw I/Q Samples} & $\rightarrow$ & \textbf{Normalization} & $\rightarrow$ & \textbf{CNN} & $\rightarrow$ & \textbf{Predicted Modulation}
+        \end{tabular}
+    }
+    \caption{End-to-end AMC pipeline used in this project.}
+    \label{fig:amc-pipeline}
+\end{figure}
 
 \section{Model Architecture}
 A 1D CNN processes the two-channel I/Q sequence. The feature extractor consists of stacked convolution, batch normalization, ReLU, and max-pooling layers with dropout for regularization. The classifier flattens features and applies two fully connected layers to predict the modulation class.
@@ -186,7 +200,14 @@ At 18 dB SNR, the confusion matrix (Figure~\ref{fig:cm-18db}) indicates clearer 
 The results validate that CNNs perform well on raw I/Q sample inputs. Performance strongly depends on the SNR distribution, with higher SNR yielding better classification. Similar modulation formats (e.g., QAM families and analog AM/FM variants) remain challenging, reflecting overlapping signal characteristics. Data quality, augmentation, and architecture depth significantly impact final accuracy. Based on these insights, the baseline CNN is a practical and interpretable approach for AMC, while leaving room for future improvements.
 
 \chapter{Conclusion and Future Work}
-This project implemented a baseline CNN for automatic modulation classification on the RadioML 2016 dataset. The model achieved an overall test accuracy of about 0.574 and demonstrated clear SNR-dependent performance trends. The main contributions include a reproducible preprocessing pipeline, a compact CNN architecture, and comprehensive evaluation using confusion matrices and SNR-wise analysis.
+This project implemented a baseline CNN for automatic modulation classification on the RadioML 2016 dataset. The model achieved an overall test accuracy of about 0.574 and demonstrated clear SNR-dependent performance trends.
+
+\textbf{Contributions:}
+\begin{itemize}
+    \item Implemented a reproducible preprocessing and stratified data-splitting pipeline for RadioML 2016.
+    \item Designed and trained a compact 1D CNN for modulation recognition on raw I/Q sequences.
+    \item Evaluated performance with overall accuracy, confusion matrices, and SNR-wise analysis.
+\end{itemize}
 
 \textbf{Limitations:} The model is evaluated on a fixed dataset and does not address real-time constraints or domain shift to other receivers and channels.
 
