@@ -35,17 +35,61 @@
 \end{titlepage}
 
 \pagenumbering{roman}
+\setcounter{page}{1}
+
+% --------------------
+% Certificate
+% --------------------
+\chapter*{Certificate}
+\addcontentsline{toc}{chapter}{Certificate}
+This is to certify that the project report titled \textbf{``Automatic Modulation Classification using Convolutional Neural Network on RadioML 2016 Dataset''} submitted by \textbf{Virav Vanani (U23EC182)}, \textbf{Surendra Gamit (U23EC195)}, and \textbf{Hari Gupta (U23EC166)} is a bonafide record of the work carried out by them under my supervision in partial fulfillment of the requirements for the degree of \textbf{B.Tech in Electronics and Communication Engineering} at the \textbf{Sardar Vallabhbhai National Institute of Technology (SVNIT), Surat} during the academic year 2025--26.
+
+\vspace{2cm}
+\noindent
+\begin{tabular}{p{0.45\textwidth} p{0.45\textwidth}}
+\textbf{Dr. Golak Santra} & \textbf{Head, ECE Department} \\
+Project Guide & SVNIT, Surat \\
+\end{tabular}
+
+\vspace{1.5cm}
+\noindent
+\textbf{External Examiner} \hfill \textbf{Date: May 2026}
+
+\vspace{0.5cm}
+\noindent
+\textbf{Place: Surat}
+
+% --------------------
+% Declaration
+% --------------------
+\chapter*{Declaration}
+\addcontentsline{toc}{chapter}{Declaration}
+We hereby declare that the work presented in this report is original and has been carried out by us under the guidance of \textbf{Dr. Golak Santra}. This report has not been submitted, either in part or in full, to any other university or institution for the award of any degree or diploma.
+
+\vspace{2cm}
+\noindent
+\begin{tabular}{p{0.6\textwidth} p{0.3\textwidth}}
+\textbf{Virav Vanani (U23EC182)} & \\
+\textbf{Surendra Gamit (U23EC195)} & \\
+\textbf{Hari Gupta (U23EC166)} & \\
+\end{tabular}
+
+\vspace{1cm}
+\noindent
+\textbf{Date: May 2026} \hfill \textbf{Place: Surat}
 
 % --------------------
 % Acknowledgement
 % --------------------
 \chapter*{Acknowledgement}
+\addcontentsline{toc}{chapter}{Acknowledgement}
 We express our sincere gratitude to our project guide, Dr. Golak Santra, for his valuable guidance, continuous support, and constructive suggestions throughout this project. We are thankful to the faculty of the Department of Electronics and Communication Engineering, SVNIT, for providing the necessary academic environment and resources. We also thank our institute for encouraging project-based learning and research. Finally, we acknowledge the teamwork and dedication of all group members in completing this project successfully.
 
 % --------------------
 % Abstract
 % --------------------
 \chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
 Automatic modulation classification (AMC) is a key function in intelligent receivers and spectrum monitoring systems. This project presents a baseline convolutional neural network (CNN) for classifying modulation types directly from raw I/Q samples using the RadioML 2016 dataset. The dataset provides labeled signals across multiple modulation schemes and signal-to-noise ratio (SNR) conditions. The proposed approach performs per-sample power normalization, encodes modulation labels, and trains a 1D CNN on I/Q sequences of length 128. The model is trained with AdamW optimization and evaluated using accuracy curves, confusion matrices, and SNR-wise performance analysis. The overall test accuracy achieved is approximately 0.574, with performance improving at higher SNRs and common confusions among closely related modulation families. The results confirm that CNNs are effective for AMC on raw I/Q data while highlighting the sensitivity to SNR distribution and modulation similarity.
 
 \tableofcontents
