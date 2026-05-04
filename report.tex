@@ -69,7 +69,7 @@ Automatic modulation classification enables adaptive communication systems, spec
 \end{itemize}
 
 \section{Scope and Limitations}
-This work focuses on a baseline CNN trained on the RadioML 2016 dataset with fixed input length ($2 \\times 128$). The model is evaluated on CPU and is not optimized for real-time deployment. Performance is limited by dataset diversity, SNR distribution, and the inherent similarity between certain modulation types (e.g., QAM families, analog AM/FM).
+This work focuses on a baseline CNN trained on the RadioML 2016 dataset with fixed input length ($2 \times 128$). The model is evaluated on CPU and is not optimized for real-time deployment. Performance is limited by dataset diversity, SNR distribution, and the inherent similarity between certain modulation types (e.g., QAM families, analog AM/FM).
 
 \section{Organization of the Report}
 The rest of this report is organized as follows. Chapter 2 presents a literature review and highlights the research gap. Chapter 3 describes the dataset, preprocessing, and the proposed CNN methodology. Chapter 4 reports experimental results and provides discussion. Chapter 5 concludes the report and outlines possible future work.
@@ -83,7 +83,7 @@ Existing literature demonstrates strong results with CNN-based AMC, but challeng
 
 \chapter{Methodology}
 \section{Dataset and Classes}
-The RadioML 2016 dataset provides labeled I/Q samples for multiple modulation schemes under varying SNR conditions. The 11 classes used in this work are: 8PSK, AM-DSB, AM-SSB, BPSK, CPFSK, GFSK, PAM4, QAM16, QAM64, QPSK, and WBFM. Each sample is represented as two channels (I and Q) with input shape $2 \\times 128$.
+The RadioML 2016 dataset provides labeled I/Q samples for multiple modulation schemes under varying SNR conditions. The 11 classes used in this work are: 8PSK, AM-DSB, AM-SSB, BPSK, CPFSK, GFSK, PAM4, QAM16, QAM64, QPSK, and WBFM. Each sample is represented as two channels (I and Q) with input shape $2 \times 128$.
 
 \section{Preprocessing and Data Split}
 All samples are converted to float32 and normalized using per-sample power normalization to stabilize training. A stratified split by modulation and SNR is used to form train/validation/test sets in a 70/15/15 ratio.
