@@ -1,0 +1,168 @@
+\documentclass[12pt,a4paper]{report}
+\usepackage{graphicx}
+\usepackage{geometry}
+\usepackage{setspace}
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage{url}
+\geometry{margin=1in}
+\onehalfspacing
+
+\begin{document}
+
+% --------------------
+% Title Page
+% --------------------
+\begin{titlepage}
+    \centering
+    \vspace*{1in}
+    {\LARGE \textbf{Automatic Modulation Classification using Convolutional Neural Network on RadioML 2016 Dataset}\\[0.6cm]}
+    {\large A Final Year Project Report submitted in partial fulfillment of the requirements for the degree of B.Tech in Electronics and Communication Engineering\\[1.2cm]}
+
+    {\large \textbf{Department of Electronics and Communication Engineering}\\
+    \textbf{Sardar Vallabhbhai National Institute of Technology (SVNIT), Surat}\\
+    \textbf{May 2026}}\\[1.2cm]
+
+    {\large \textbf{Submitted by}\\
+    Virav Vanani (U23EC182)\\
+    Surendra Gamit (U23EC195)\\
+    Hari Gupta (U23EC166)}\\[1.2cm]
+
+    {\large \textbf{Under the guidance of}\\
+    Dr. Golak Santra}
+
+    \vfill
+\end{titlepage}
+
+\pagenumbering{roman}
+
+% --------------------
+% Acknowledgement
+% --------------------
+\chapter*{Acknowledgement}
+We express our sincere gratitude to our project guide, Dr. Golak Santra, for his valuable guidance, continuous support, and constructive suggestions throughout this project. We are thankful to the faculty of the Department of Electronics and Communication Engineering, SVNIT, for providing the necessary academic environment and resources. We also thank our institute for encouraging project-based learning and research. Finally, we acknowledge the teamwork and dedication of all group members in completing this project successfully.
+
+% --------------------
+% Abstract
+% --------------------
+\chapter*{Abstract}
+Automatic modulation classification (AMC) is a key function in intelligent receivers and spectrum monitoring systems. This project presents a baseline convolutional neural network (CNN) for classifying modulation types directly from raw I/Q samples using the RadioML 2016 dataset. The dataset provides labeled signals across multiple modulation schemes and signal-to-noise ratio (SNR) conditions. The proposed approach performs per-sample power normalization, encodes modulation labels, and trains a 1D CNN on I/Q sequences of length 128. The model is trained with AdamW optimization and evaluated using accuracy curves, confusion matrices, and SNR-wise performance analysis. The overall test accuracy achieved is approximately 0.574, with performance improving at higher SNRs and common confusions among closely related modulation families. The results confirm that CNNs are effective for AMC on raw I/Q data while highlighting the sensitivity to SNR distribution and modulation similarity.
+
+\tableofcontents
+\listoffigures
+\listoftables
+
+\chapter{Introduction}
+\pagenumbering{arabic}
+
+\section{Motivation and Background}
+Automatic modulation classification enables adaptive communication systems, spectrum surveillance, and cognitive radio by identifying signal types without prior knowledge. Traditional AMC methods rely on handcrafted features and expert rules, which can be brittle under channel impairments. Deep learning, especially CNNs, offers a data-driven alternative that can learn discriminative patterns directly from raw I/Q samples.
+
+\section{Problem Definition and Objectives}
+\textbf{Problem Statement:} Given a received signal sample represented by I/Q sequences, predict the modulation class among 11 possible classes.
+
+\textbf{Objectives:}
+\begin{itemize}
+    \item Build a CNN-based classifier for modulation recognition on the RadioML 2016 dataset.
+    \item Apply appropriate preprocessing and data splits for reliable training and evaluation.
+    \item Evaluate the model using accuracy curves, confusion matrices, and SNR-wise analysis.
+\end{itemize}
+
+\section{Scope and Limitations}
+This work focuses on a baseline CNN trained on the RadioML 2016 dataset with fixed input length (2 \times 128). The model is evaluated on CPU and is not optimized for real-time deployment. Performance is limited by dataset diversity, SNR distribution, and the inherent similarity between certain modulation types (e.g., QAM families, analog AM/FM).
+
+\section{Organization of the Report}
+The rest of this report is organized as follows. Chapter 2 presents a literature review and highlights the research gap. Chapter 3 describes the dataset, preprocessing, and the proposed CNN methodology. Chapter 4 reports experimental results and provides discussion. Chapter 5 concludes the report and outlines possible future work.
+
+\chapter{Literature Review}
+\section{Review of Existing Work}
+O’Shea and West introduced the RadioML dataset generation framework using GNU Radio and established a standard benchmark for modulation recognition tasks\cite{oshea2016dataset}. O’Shea \textit{et al.} proposed early CNN architectures for modulation recognition and demonstrated that convolutional models can learn directly from I/Q samples\cite{oshea2016cnn}. Later studies evaluated deep learning models for wireless signal classification in practical sensing scenarios and showed improved accuracy with larger and more diverse datasets\cite{rajendran2018dl}. PyTorch has become a widely used framework for prototyping such models due to its flexibility and efficient GPU/CPU execution\cite{pytorchdocs}.
+
+\section{Research Gap}
+Existing literature demonstrates strong results with CNN-based AMC, but challenges remain in achieving robust performance across low-SNR regimes and in distinguishing closely related modulation families. Many studies also rely on deeper or more complex architectures, which can reduce interpretability and increase computational cost. This project addresses the gap by implementing a simple, interpretable baseline CNN and analyzing its behavior across SNR values to understand performance trends and confusion patterns.
+
+\chapter{Methodology}
+\section{Dataset and Classes}
+The RadioML 2016 dataset provides labeled I/Q samples for multiple modulation schemes under varying SNR conditions. The 11 classes used in this work are: 8PSK, AM-DSB, AM-SSB, BPSK, CPFSK, GFSK, PAM4, QAM16, QAM64, QPSK, and WBFM. Each sample is represented as two channels (I and Q) with input shape 2 \times 128.
+
+\section{Preprocessing and Data Split}
+All samples are converted to float32 and normalized using per-sample power normalization to stabilize training. A stratified split by modulation and SNR is used to form train/validation/test sets in a 70/15/15 ratio.
+
+\section{Model Architecture}
+A 1D CNN processes the two-channel I/Q sequence. The feature extractor consists of stacked convolution, batch normalization, ReLU, and max-pooling layers with dropout for regularization. The classifier flattens features and applies two fully connected layers to predict the modulation class.
+
+\section{Training Configuration}
+Training uses class-weighted cross-entropy to mitigate class imbalance. The model is optimized using AdamW (learning rate 1e-3, weight decay 1e-4) for 40 epochs with a cosine annealing learning rate schedule. Performance is tracked using loss and accuracy curves on training and validation sets.
+
+\section{Evaluation Metrics}
+The model is evaluated using overall test accuracy, class-wise confusion matrices, and SNR-wise accuracy curves. A high-SNR confusion matrix (18 dB) is used to analyze performance under favorable channel conditions.
+
+\chapter{Results and Discussion}
+\section{Training Dynamics}
+Figure~\ref{fig:loss-accuracy} shows the training and validation loss/accuracy trends, indicating stable convergence over epochs.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{fig_loss_accuracy.png}
+    \caption{Training and validation loss/accuracy curves.}
+    \label{fig:loss-accuracy}
+\end{figure}
+
+\section{Overall Classification Performance}
+The overall test accuracy is approximately 0.574. The row-normalized confusion matrix in Figure~\ref{fig:cm-overall} shows strong performance on several digital modulations while revealing confusions among closely related classes.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{fig_confusion_overall_percent.png}
+    \caption{Overall confusion matrix (percentage, row-normalized).}
+    \label{fig:cm-overall}
+\end{figure}
+
+\section{SNR-wise Performance}
+Figure~\ref{fig:snr-acc} shows that accuracy increases with SNR, confirming the sensitivity of AMC performance to channel conditions.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{fig_accuracy_vs_snr.png}
+    \caption{Accuracy vs. SNR on the test split.}
+    \label{fig:snr-acc}
+\end{figure}
+
+\section{High-SNR Confusion Analysis}
+At 18 dB SNR, the confusion matrix (Figure~\ref{fig:cm-18db}) indicates clearer separation between classes, though similar modulation families still show occasional misclassification.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{fig_confusion_18db_percent.png}
+    \caption{Confusion matrix at 18 dB SNR (percentage, row-normalized).}
+    \label{fig:cm-18db}
+\end{figure}
+
+\section{Discussion}
+The results validate that CNNs perform well on raw I/Q sample inputs. Performance strongly depends on the SNR distribution, with higher SNR yielding better classification. Similar modulation formats (e.g., QAM families and analog AM/FM variants) remain challenging, reflecting overlapping signal characteristics. Data quality, augmentation, and architecture depth significantly impact final accuracy. Based on these insights, the baseline CNN is a practical and interpretable approach for AMC, while leaving room for future improvements.
+
+\chapter{Conclusion and Future Work}
+This project implemented a baseline CNN for automatic modulation classification on the RadioML 2016 dataset. The model achieved an overall test accuracy of about 0.574 and demonstrated clear SNR-dependent performance trends. The main contributions include a reproducible preprocessing pipeline, a compact CNN architecture, and comprehensive evaluation using confusion matrices and SNR-wise analysis.
+
+\textbf{Limitations:} The model is evaluated on a fixed dataset and does not address real-time constraints or domain shift to other receivers and channels.
+
+\textbf{Future Work:} Future efforts can explore deeper architectures, data augmentation, attention mechanisms, and domain adaptation to improve robustness at low SNR and for closely related modulation families.
+
+\begin{thebibliography}{99}
+\bibitem{oshea2016dataset}
+T. J. O’Shea and N. West, “Radio Machine Learning Dataset Generation with GNU Radio,” 2016.
+
+\bibitem{oshea2016cnn}
+T. J. O’Shea, J. Corgan, and T. C. Clancy, “Convolutional Radio Modulation Recognition Networks,” in \textit{International Conference on Engineering Applications of Neural Networks}, 2016.
+
+\bibitem{pytorchdocs}
+PyTorch, “PyTorch Documentation,” [Online]. Available: \url{https://pytorch.org/docs/}
+
+\bibitem{rajendran2018dl}
+S. Rajendran \textit{et al.}, “Deep Learning Models for Wireless Signal Classification with Distributed Low-Cost Spectrum Sensors,” \textit{IEEE Transactions on Cognitive Communications and Networking}, 2018.
+
+\bibitem{ieeeamc}
+Relevant IEEE articles on AMC and deep neural network based signal classification.
+\end{thebibliography}
+
+\end{document}
