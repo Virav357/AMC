@@ -46,3 +46,6 @@ experiments or compare model variants.
 
 The LaTeX report template remains in the repository and can be updated with
 the results generated under `artifacts/`.
+
+The Phase 2 workflow is summarized visually in
+[`artifacts/phase2-results-overview.svg`](artifacts/phase2-results-overview.svg).
