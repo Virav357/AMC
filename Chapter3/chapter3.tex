@@ -27,3 +27,21 @@ claim of perfect real-world receiver performance. The benchmark is synthetic,
 and the experiment does not yet include over-the-air recordings, channel
 transfer mismatch, or hardware impairments. These limitations are important
 when interpreting the result for a practical communication receiver.
+
+\section{Phase 2 Communication-System Results}
+The new communication experiment uses mixed BPSK, QPSK, 8-PSK, and 16-QAM
+frames under block Rayleigh fading, AWGN, carrier phase offset, and frequency
+offset. At 16 dB SNR, the adaptive receiver achieved a BER of 0.095\%,
+modulation decision accuracy of 100\%, and packet success of 75.5\% over the
+200-frame-per-SNR experiment. At 10 dB, decision accuracy was 99.5\% and BER
+was 4.69\%. At lower SNR, modulation decisions become unreliable; this is an
+important communication-system result rather than an artificial claim of
+perfect operation.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{artifacts/phase2-link-results.png}
+\caption{Phase 2 adaptive communication receiver: BER, decision accuracy, and
+packet success compared with a fixed-QPSK receiver.}
+\label{fig:phase2link}
+\end{figure}

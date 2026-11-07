@@ -29,3 +29,13 @@ The experiment uses random seed 42, batch size 1024, learning rate
 $3\times10^{-4}$, and eight training epochs. The implementation is available
 in \texttt{scripts/train.py}; evaluation is implemented in
 \texttt{scripts/evaluate.py}.
+
+\section{Communication-Link Experiment}
+The Phase 2 experiment adds a complete digital-link simulation around the
+classifier baseline. Random bits are modulated using BPSK, QPSK, 8-PSK, or
+16-QAM, transmitted through a block-Rayleigh plus AWGN channel, and impaired
+by carrier phase and frequency offsets. Pilot-assisted synchronization and
+channel equalization are applied before modulation selection. The proposed
+adaptive receiver selects a demodulator from the estimated modulation and is
+compared with a receiver fixed to QPSK. BER, packet success, and modulation
+decision accuracy are measured over SNR.

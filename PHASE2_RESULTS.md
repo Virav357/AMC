@@ -1,6 +1,6 @@
-# Phase 2 Results — Automatic Modulation Classification
+# Phase 1 Baseline Results — Automatic Modulation Classification
 
-## Project objective
+## Baseline objective
 
 The Phase 2 objective was to design, train, and evaluate a deep-learning
 receiver that identifies the modulation format of a received signal directly
@@ -38,7 +38,7 @@ has learned signal structure rather than producing a random class assignment.
 The confusion matrix shows remaining ambiguity between modulation types with
 similar constellation or waveform characteristics.
 
-## Deliverables added in Phase 2
+## Baseline deliverables
 
 1. `src/amc/data.py`: RadioML loader, normalization, stratified split, and
    PyTorch dataset.
@@ -52,9 +52,29 @@ similar constellation or waveform characteristics.
 
 ## Interpretation for evaluation
 
-This Phase 2 implementation establishes a reproducible deep-learning baseline,
-not a claim of perfect real-world receiver performance. The principal
-limitations are the synthetic dataset, finite training budget, and absence of
-over-the-air hardware measurements. Phase 3 can improve generalization using
-data augmentation, residual or attention-based networks, calibration,
-cross-dataset testing, and live SDR validation.
+This is the Phase 1 classification baseline, not the final Phase 2
+communication-system result. Its principal limitations are the synthetic
+dataset, finite training budget, and absence of a transmitter/channel/
+receiver BER experiment. Phase 2 addresses those limitations through the
+adaptive communication receiver defined in `PHASE2_SCOPE.md`.
+
+## Phase 2 communication-link result
+
+The new Phase 2 experiment is implemented in `scripts/run_phase2_link.py`.
+It generates mixed BPSK, QPSK, 8-PSK, and 16-QAM frames, applies block
+Rayleigh fading, AWGN, carrier phase offset, and frequency offset, then uses
+pilot-assisted synchronization and adaptive demodulation.
+
+With 200 frames per SNR and seed 42, the adaptive receiver reached:
+
+| SNR | BER | Modulation decision accuracy | Packet success |
+|---:|---:|---:|---:|
+| 10 dB | 4.69% | 99.5% | 49.0% |
+| 12 dB | 1.85% | 100.0% | 54.5% |
+| 16 dB | 0.095% | 100.0% | 75.5% |
+
+At low SNR, the receiver correctly exposes the main communication challenge:
+modulation ambiguity causes demodulator mismatch and packet failure. This is
+why Phase 2 reports BER and packet success in addition to AMC accuracy. The
+generated figure is `artifacts/phase2-link-results.png`, with machine-readable
+values in `artifacts/phase2-link-results.json`.

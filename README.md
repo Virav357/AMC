@@ -1,17 +1,42 @@
-# Automatic Modulation Classification — Phase 2
+# Intelligent Adaptive Communication Receiver — Phase 2
 
-This repository now contains the Phase 2 implementation for the B.Tech ECE
-project. It extends the Phase 1 report/template work with a reproducible
-training and evaluation pipeline for raw I/Q automatic modulation
-classification (AMC).
+This repository contains the Phase 2 direction for the B.Tech ECE project:
+an intelligent adaptive digital communication receiver. The earlier CNN-only
+RadioML experiment is retained as the **Phase 1 baseline**. Phase 2 extends
+that baseline into a transmitter-channel-receiver system and evaluates actual
+communication quality.
 
-## Scope
+Read [`PHASE2_SCOPE.md`](PHASE2_SCOPE.md) for the corrected project scope.
+
+## Phase 1 baseline
 
 - Load the RadioML 2016.10a pickle format and normalize each I/Q example.
 - Create deterministic, stratified train/validation/test splits.
 - Train a compact 1-D CNN with class-weighted cross-entropy, AdamW, and cosine
   learning-rate scheduling.
 - Report overall accuracy, confusion matrices, and accuracy at each SNR.
+
+## Phase 2 contribution
+
+- Generate modulated bit streams at the transmitter.
+- Pass signals through AWGN, fading, frequency-offset, and phase-offset
+  channels.
+- Use modulation recognition to select an adaptive demodulator.
+- Measure BER, SER, packet success, throughput, spectral efficiency, and
+  decision accuracy.
+- Compare the adaptive receiver with a fixed-modulation receiver.
+
+Run the new communication-domain experiment with:
+
+```bash
+python scripts/run_phase2_link.py --frames 200 \
+  --output artifacts/phase2-link-results.png
+```
+
+This produces BER, packet-success, and modulation-decision results for the
+adaptive receiver versus a fixed-QPSK receiver under block Rayleigh fading,
+AWGN, carrier phase offset, and frequency offset with pilot-assisted
+synchronization.
 
 ## Setup
 
@@ -36,13 +61,12 @@ checkpoint stores the class-name ordering and input shape needed for
 evaluation. Use `--epochs`, `--batch-size`, and `--learning-rate` to reproduce
 experiments or compare model variants.
 
-## Phase 2 deliverables
+## Phase 1 deliverables retained for comparison
 
 1. Dataset preparation and reproducible experiment configuration.
 2. CNN baseline implementation for raw I/Q signals.
 3. Test accuracy, confusion matrix, and SNR-wise analysis.
-4. A foundation for Phase 3 improvements such as augmentation, residual
-   networks, transformer baselines, and over-the-air validation.
+4. A baseline for the communication-system experiments in Phase 2.
 
 The LaTeX report template remains in the repository and can be updated with
 the results generated under `artifacts/`.
@@ -50,11 +74,11 @@ the results generated under `artifacts/`.
 The Phase 2 workflow is summarized visually in
 [`artifacts/phase2-results-overview.svg`](artifacts/phase2-results-overview.svg).
 
-## Measured Phase 2 result
+## Existing Phase 1 measured result
 
-The completed RadioML experiment produced 53.94% accuracy on the held-out
+The completed baseline RadioML experiment produced 53.94% accuracy on the held-out
 test set after 8 CNN training epochs. Accuracy increased from 9.24% at -20 dB
 SNR to 81.68% at +12 dB SNR, demonstrating the expected effect of channel
 noise. The complete figure is
-[`artifacts/phase2-results.png`](artifacts/phase2-results.png), and the
-panel-facing interpretation is in [`PHASE2_RESULTS.md`](PHASE2_RESULTS.md).
+[`artifacts/phase2-results.png`](artifacts/phase2-results.png). It is not the
+final Phase 2 result; the communication-link evaluation is the new target.
