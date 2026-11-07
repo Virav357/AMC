@@ -5,3 +5,4 @@ __pycache__/
 artifacts/
 !artifacts/
 !artifacts/phase2-results-overview.svg
+data/

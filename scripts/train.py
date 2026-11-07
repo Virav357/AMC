@@ -64,6 +64,7 @@ def main() -> None:
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.learning_rate, weight_decay=1e-4)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
     best_accuracy = -1.0
+    history: list[dict[str, float]] = []
     args.output.parent.mkdir(parents=True, exist_ok=True)
 
     for epoch in range(1, args.epochs + 1):
@@ -75,6 +76,7 @@ def main() -> None:
             optimizer.step()
         scheduler.step()
         validation_accuracy = evaluate(model, validation_loader, device)
+        history.append({"epoch": float(epoch), "validation_accuracy": validation_accuracy})
         print(f"epoch={epoch:03d} validation_accuracy={validation_accuracy:.4f}")
         if validation_accuracy > best_accuracy:
             best_accuracy = validation_accuracy
@@ -84,6 +86,7 @@ def main() -> None:
                     "class_names": class_names,
                     "input_shape": list(samples.shape[1:]),
                     "validation_accuracy": best_accuracy,
+                    "history": history,
                 },
                 args.output,
             )

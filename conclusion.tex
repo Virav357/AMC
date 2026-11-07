@@ -1,7 +1,19 @@
 \chapter{Conclusion \& Future Scope}
-Before starting section write small paragraph about the contain of the chapter.
 
 \section{Conclusion}
-------
+This Phase 2 project developed a complete automatic modulation classification
+pipeline from raw I/Q samples to quantitative evaluation. A compact
+one-dimensional CNN was trained on RadioML 2016.10a using normalized samples,
+stratified data splits, class-weighted cross-entropy, AdamW optimization, and
+cosine learning-rate scheduling. The model achieved 53.94\% held-out test
+accuracy, while SNR-wise accuracy increased from 9.24\% at -20 dB to 81.68\%
+at +12 dB. The result demonstrates that deep learning can learn useful
+modulation-discriminative representations directly from baseband data.
+
 \section{Future Scope}
-------
+Future work will include signal augmentation, residual and attention-based
+architectures, calibration and confidence estimation, cross-dataset
+validation, and over-the-air testing with an SDR platform. A larger training
+budget and systematic hyperparameter study can further improve the benchmark
+score and robustness to frequency offset, timing offset, fading, and
+transmitter hardware imperfections.

@@ -1,0 +1,31 @@
+\chapter{Methodology}
+
+\section{Dataset}
+RadioML 2016.10a contains labeled examples from 11 modulation classes at SNR
+values between -20 dB and +18 dB. Each example consists of 128 complex
+baseband samples represented as two real-valued channels: I and Q.
+
+\section{Preprocessing and Data Split}
+Each example is power-normalized using
+\[
+\tilde{x} = \frac{x}{\sqrt{\operatorname{mean}(x^2)+\epsilon}},
+\]
+where $\epsilon$ avoids division by zero. The data are divided using a
+deterministic stratified split: 70\% for training, 15\% for validation, and
+15\% for testing. Stratification preserves class balance across the splits.
+
+\section{CNN Architecture}
+The proposed network uses three one-dimensional convolutional blocks. Each
+block contains convolution, batch normalization, ReLU activation, and
+max-pooling. Adaptive average pooling produces a fixed-size representation,
+followed by dropout and a fully connected classification layer. The input
+shape is $(2,128)$ and the output contains one logit for each modulation
+class.
+
+\section{Training}
+The model is optimized with AdamW and cosine learning-rate scheduling.
+Class-weighted cross-entropy reduces the effect of unequal class frequencies.
+The experiment uses random seed 42, batch size 1024, learning rate
+$3\times10^{-4}$, and eight training epochs. The implementation is available
+in \texttt{scripts/train.py}; evaluation is implemented in
+\texttt{scripts/evaluate.py}.

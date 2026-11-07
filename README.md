@@ -28,7 +28,7 @@ repository if it is not already available locally. Then run:
 python scripts/train.py --data /path/to/RML2016.10a_dict.pkl \
   --output artifacts/amc.pt
 python scripts/evaluate.py --data /path/to/RML2016.10a_dict.pkl \
-  --checkpoint artifacts/amc.pt
+  --checkpoint artifacts/amc.pt --output artifacts/phase2-results.png
 ```
 
 The default split is 70% training, 15% validation, and 15% testing. The
@@ -49,3 +49,12 @@ the results generated under `artifacts/`.
 
 The Phase 2 workflow is summarized visually in
 [`artifacts/phase2-results-overview.svg`](artifacts/phase2-results-overview.svg).
+
+## Measured Phase 2 result
+
+The completed RadioML experiment produced 53.94% accuracy on the held-out
+test set after 8 CNN training epochs. Accuracy increased from 9.24% at -20 dB
+SNR to 81.68% at +12 dB SNR, demonstrating the expected effect of channel
+noise. The complete figure is
+[`artifacts/phase2-results.png`](artifacts/phase2-results.png), and the
+panel-facing interpretation is in [`PHASE2_RESULTS.md`](PHASE2_RESULTS.md).

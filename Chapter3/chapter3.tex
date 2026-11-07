@@ -1,0 +1,29 @@
+\chapter{Results and Discussion}
+
+\section{Experimental Results}
+The trained CNN achieved 53.94\% accuracy on the held-out test set of 33,000
+examples. The best validation accuracy was 54.02\%. Figure
+\ref{fig:phase2results} presents the test confusion matrix and the
+modulation-classification accuracy as a function of SNR.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{artifacts/phase2-results.png}
+\caption{Measured Phase 2 CNN results on RadioML 2016.10a.}
+\label{fig:phase2results}
+\end{figure}
+
+\section{SNR-wise Analysis}
+Accuracy was 9.24\% at -20 dB SNR and increased to 81.68\% at +12 dB SNR.
+This trend is expected: at low SNR, noise obscures constellation and
+waveform features, while at higher SNR the learned representation can
+separate modulation families more reliably. Residual confusion is expected
+between modulation types with similar time-domain or constellation
+characteristics.
+
+\section{Discussion}
+The result establishes a reproducible deep-learning baseline rather than a
+claim of perfect real-world receiver performance. The benchmark is synthetic,
+and the experiment does not yet include over-the-air recordings, channel
+transfer mismatch, or hardware impairments. These limitations are important
+when interpreting the result for a practical communication receiver.
