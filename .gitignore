@@ -8,4 +8,5 @@ artifacts/*
 !artifacts/phase2-results.png
 !artifacts/phase2-link-results.png
 !artifacts/phase2-link-results.json
+!artifacts/final-phase1-phase2-comparison.png
 data/

@@ -32,11 +32,15 @@ def main() -> None:
     snrs = np.arange(-4, 17, 2)
     adaptive_ber: list[float] = []
     fixed_ber: list[float] = []
+    adaptive_ser: list[float] = []
+    fixed_ser: list[float] = []
     decision_accuracy: list[float] = []
     packet_success: list[float] = []
+    adaptive_throughput: list[float] = []
 
     for snr in snrs:
         adaptive_errors = fixed_errors = total_bits = correct_decisions = successful_packets = 0
+        adaptive_symbol_errors = fixed_symbol_errors = total_symbols = 0
         for _ in range(args.frames):
             modulation = str(rng.choice(MODULATIONS))
             bits_per_symbol = {"BPSK": 1, "QPSK": 2, "8PSK": 3, "16QAM": 4}[modulation]
@@ -61,12 +65,21 @@ def main() -> None:
             adaptive_errors += min(bit_errors(adaptive_bits, bits), len(bits))
             fixed_errors += min(bit_errors(fixed_bits, bits), len(bits))
             total_bits += len(bits)
+            adaptive_symbol_errors += min(bit_errors(adaptive_bits, bits), len(frame.received))
+            fixed_symbol_errors += min(bit_errors(fixed_bits, bits), len(frame.received))
+            total_symbols += len(frame.received)
             correct_decisions += int(predicted == modulation)
             successful_packets += int(np.array_equal(adaptive_bits, bits))
         adaptive_ber.append(adaptive_errors / total_bits)
         fixed_ber.append(fixed_errors / total_bits)
+        adaptive_ser.append(adaptive_symbol_errors / total_symbols)
+        fixed_ser.append(fixed_symbol_errors / total_symbols)
         decision_accuracy.append(correct_decisions / args.frames)
         packet_success.append(successful_packets / args.frames)
+        adaptive_throughput.append(
+            float(np.mean([{"BPSK": 1, "QPSK": 2, "8PSK": 3, "16QAM": 4}[m]
+                          for m in MODULATIONS]) * packet_success[-1])
+        )
 
     result = {
         "seed": args.seed,
@@ -74,8 +87,11 @@ def main() -> None:
         "snr_db": snrs.tolist(),
         "adaptive_ber": adaptive_ber,
         "fixed_qpsk_ber": fixed_ber,
+        "adaptive_ser": adaptive_ser,
+        "fixed_qpsk_ser": fixed_ser,
         "modulation_decision_accuracy": decision_accuracy,
         "adaptive_packet_success": packet_success,
+        "adaptive_throughput_bits_per_symbol": adaptive_throughput,
         "modulations": list(MODULATIONS),
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)

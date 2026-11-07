@@ -38,6 +38,16 @@ adaptive receiver versus a fixed-QPSK receiver under block Rayleigh fading,
 AWGN, carrier phase offset, and frequency offset with pilot-assisted
 synchronization.
 
+For the complete panel comparison, run:
+
+```bash
+python scripts/build_final_report.py
+```
+
+The final comparison figure is
+[`artifacts/final-phase1-phase2-comparison.png`](artifacts/final-phase1-phase2-comparison.png),
+with the written interpretation in [`FINAL_PHASE2_REPORT.md`](FINAL_PHASE2_REPORT.md).
+
 ## Setup
 
 ```bash
