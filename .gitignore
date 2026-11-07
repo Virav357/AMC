@@ -2,7 +2,8 @@
 __pycache__/
 .pytest_cache/
 *.py[cod]
-artifacts/
+artifacts/*
 !artifacts/
 !artifacts/phase2-results-overview.svg
+!artifacts/phase2-results.png
 data/
