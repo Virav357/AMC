@@ -1,0 +1,57 @@
+\chapter{Discussion, Limitations and Engineering Significance}
+
+\section{Engineering Significance}
+The main engineering significance of Phase 2 is the connection between
+machine learning and physical-layer receiver operation. In Phase 1, the
+classifier produces a prediction that ends at the classification metric. In
+Phase 2, the prediction influences the selected demodulator and therefore
+affects the recovered information. This creates a measurable chain from
+received waveform to communication reliability.
+
+\section{Why Adaptation is Required}
+A fixed receiver is designed for one expected modulation. Such a receiver may
+be simple, but it fails when the transmitter changes its format. Adaptive
+modulation recognition enables the receiver to support mixed traffic and
+potentially select more efficient modulation modes when the channel permits.
+The packet-success and throughput results show that high-order modulation is
+useful only when the receiver can identify and recover it reliably.
+
+\section{Failure Modes}
+The main failure mode is modulation ambiguity at low SNR. Noise causes
+different constellations to overlap after normalization, so the minimum
+distance decision can select the wrong format. A second failure mode is
+residual synchronization error. Even when the modulation is correct, phase,
+frequency, or timing error can move symbols across decision boundaries. A
+third failure mode occurs when a single bit error causes a packet to be
+declared unsuccessful, making packet success stricter than BER.
+
+\section{Limitations}
+The present system is a controlled software simulation. The receiver uses a
+pilot-assisted channel and carrier estimate, whereas a practical SDR must
+estimate these quantities from noisy observations. The current Phase 2
+modulation estimator is constellation-based and does not yet invoke the
+trained CNN online. The simulation also omits pulse shaping, matched
+filtering, timing recovery, forward-error correction, interleaving, and
+automatic repeat request.
+
+\section{Reproducibility and Data Integrity}
+Every reported result is generated from code in the repository. The random
+seed, SNR sweep, number of frames, modulation set, channel model, and output
+paths are explicit. The JSON result file is retained alongside the figures,
+which provides a machine-readable record for panel verification and future
+experiments.
+
+\section{Proposed Phase 3 Extensions}
+The next stage should replace the simulated correction with a complete SDR
+front-end. A confidence-aware receiver could select a robust fallback
+modulation or request retransmission when the classification margin is small.
+Forward-error correction could be used to compare uncoded and coded BER.
+Further studies should include frequency-selective multipath, Doppler,
+oscillator phase noise, nonlinear amplification, and over-the-air recordings.
+
+\section{Summary of New Work}
+Compared with Phase 1, the project now includes a transmitter, a configurable
+channel, a receiver front-end, adaptive modulation selection, demodulation,
+bit recovery, and communication-level evaluation. The new contribution is
+therefore a complete adaptive communication experiment rather than only a
+change in neural-network architecture.

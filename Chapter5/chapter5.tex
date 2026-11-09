@@ -1,0 +1,94 @@
+\chapter{Software Implementation and Experimental Setup}
+
+\section{Implementation Structure}
+The repository is organized into a reusable Python package and command-line
+experiments. The Phase 1 data and model modules are kept separate from the
+Phase 2 communication primitives. This separation allows the baseline to be
+retrained independently and prevents the communication experiment from
+depending on a hidden or manually edited result.
+
+\begin{table}[H]
+\centering
+\caption{Software modules used in the project.}
+\begin{tabular}{p{5cm} p{8cm}}
+\hline
+\textbf{File} & \textbf{Function}\\
+\hline
+\texttt{src/amc/data.py} & RadioML loading, normalization, stratified splits\\
+\texttt{src/amc/model.py} & Phase 1 Conv1D CNN definition\\
+\texttt{src/amc/communications.py} & Modulation, channel, estimation, demodulation\\
+\texttt{scripts/train.py} & Phase 1 model training and checkpointing\\
+\texttt{scripts/evaluate.py} & Phase 1 test and SNR-wise evaluation\\
+\texttt{scripts/run\_phase2\_link.py} & Complete Phase 2 link simulation\\
+\texttt{scripts/build\_final\_report.py} & Consolidated comparison figure\\
+\texttt{scripts/build\_parameter\_figures.py} & Parameter and architecture figures\\
+\hline
+\end{tabular}
+\end{table}
+
+\section{Phase 1 Dataset Preparation}
+RadioML 2016.10a is loaded from its dictionary representation. Each key
+contains a modulation name and SNR value, while the associated value contains
+I/Q arrays. The loader concatenates all groups, assigns integer class labels,
+records SNR values, and performs per-example power normalization. A
+deterministic stratified split is then generated using seed 42.
+
+\section{Phase 1 Model Configuration}
+The baseline model receives two input channels and 128 temporal samples. The
+first convolution uses 64 filters with kernel size 7, the second uses 128
+filters with kernel size 5, and the third uses 256 filters with kernel size 3.
+Each convolution is followed by batch normalization and ReLU. Max-pooling
+reduces the temporal dimension, adaptive average pooling creates a fixed-size
+representation, and dropout reduces overfitting. The output layer contains
+11 class logits and the complete network has 144,331 trainable parameters.
+
+\section{Training Procedure}
+Training uses class-weighted cross-entropy, AdamW optimization, cosine
+annealing, a learning rate of $3\times10^{-4}$, weight decay $10^{-4}$,
+batch size 1024, and seed 42. The reported run uses eight epochs. The best
+validation checkpoint is stored with class ordering, input shape, validation
+history, and model weights.
+
+\section{Phase 2 Link Configuration}
+The final Phase 2 experiment uses BPSK, QPSK, 8-PSK, and 16-QAM with 256
+symbols per frame. The SNR is swept from -4 dB to +16 dB in 2 dB increments,
+with 200 frames per SNR and seed 42. Every frame passes through block
+Rayleigh fading, AWGN, phase offset, and frequency offset.
+
+\begin{table}[H]
+\centering
+\caption{Final experimental settings.}
+\begin{tabular}{p{6cm} p{7cm}}
+\hline
+\textbf{Parameter} & \textbf{Value}\\
+\hline
+Modulation formats & BPSK, QPSK, 8-PSK, 16-QAM\\
+Frame size & 256 symbols\\
+Channel & Block Rayleigh fading plus AWGN\\
+Carrier impairments & Random phase and frequency offset\\
+Synchronization & Pilot-assisted simulated estimate\\
+SNR sweep & -4, -2, \ldots, 16 dB\\
+Frames per SNR & 200\\
+Metrics & BER, SER, packet success, throughput, decision accuracy\\
+Seed & 42\\
+\hline
+\end{tabular}
+\end{table}
+
+\section{Execution Commands}
+The Phase 2 experiment is executed from the repository root:
+\begin{verbatim}
+python scripts/run_phase2_link.py --frames 200 \
+  --output artifacts/phase2-link-results.png
+\end{verbatim}
+The command writes both a graph and a JSON file. The JSON file is the source
+for the final comparison and parameter figures:
+\begin{verbatim}
+python scripts/build_final_report.py
+python scripts/build_parameter_figures.py
+\end{verbatim}
+
+\section{Verification}
+Four automated tests verify reproducible data splitting, input validation,
+modulation round trips, and clean constellation identification. Python
+compilation and whitespace checks are also run before publication.

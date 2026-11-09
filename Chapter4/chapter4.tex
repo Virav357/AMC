@@ -1,0 +1,80 @@
+\chapter{System Design and Communication Algorithms}
+
+\section{Design Requirements}
+The Phase 2 receiver is designed for a non-cooperative communication
+environment in which the transmitted modulation may change from frame to
+frame. The design must therefore support modulation identification,
+constellation recovery, adaptive demodulation, and communication-quality
+measurement. The software architecture is modular so that the simulated
+channel can later be replaced by an SDR front-end.
+
+\section{Transmitter Design}
+The transmitter begins with a random binary information frame. The selected
+modulation determines the number of bits represented by each symbol. BPSK
+maps one bit to one of two phase states, QPSK maps two bits to four phase
+states, 8-PSK maps three bits to eight phase states, and 16-QAM maps four
+bits to sixteen amplitude-phase points. The constellation points are
+normalized to unit average power, which makes SNR comparisons consistent
+across modulation formats.
+
+\section{Channel Design}
+The channel module applies a complex block-fading coefficient to every frame.
+The coefficient changes between frames and is constant within one frame.
+Complex AWGN is then added using the requested SNR. To represent oscillator
+and carrier mismatch, a phase offset and a small normalized frequency offset
+are applied to the symbol sequence. These impairments are important because a
+receiver can have a correct modulation hypothesis but still recover bits
+incorrectly if the constellation is not synchronized.
+
+\section{Receiver Front-End}
+The simulated receiver uses the known frame-level channel and offset estimate
+as a pilot-assisted reference. It first removes the channel coefficient and
+then compensates for phase rotation and frequency drift. The resulting
+symbols are normalized before constellation comparison. In a hardware
+implementation, this stage would be replaced by a preamble detector, AGC,
+timing recovery loop, carrier recovery loop, and channel estimator.
+
+\section{Adaptive Modulation Decision}
+For each candidate constellation, the receiver calculates the average
+nearest-point error over several phase hypotheses. The candidate with the
+lowest penalized error is selected. The penalty term prevents a high-order
+constellation from winning merely because it contains more possible points.
+This decision is intentionally interpretable and provides a useful baseline
+for a future neural online classifier.
+
+\section{Adaptive Demodulation}
+The selected modulation is passed to the demodulator. Each equalized symbol
+is assigned to its nearest constellation point and converted to the
+corresponding bit label. The recovered frame is compared with the original
+transmitted frame. The receiver records both modulation-decision errors and
+bit-recovery errors, allowing the two error sources to be studied separately.
+
+\section{Fixed-Modulation Reference}
+The fixed-QPSK receiver provides a reference for the value of adaptation. It
+does not identify the modulation and always uses QPSK demodulation. It can
+perform well when the actual frame is QPSK, but it is unsuitable when the
+transmitter changes modulation. The adaptive receiver is expected to provide
+better mixed-modulation operation when its decision is reliable.
+
+\section{Algorithmic Flow}
+\begin{algorithm}[H]
+\caption{Phase 2 adaptive receiver}
+\begin{algorithmic}[1]
+\STATE Generate random bits and select a modulation
+\STATE Map bits to normalized complex symbols
+\STATE Apply fading, noise, phase offset, and frequency offset
+\STATE Apply pilot-assisted synchronization and channel equalization
+\STATE Calculate candidate constellation errors
+\STATE Select the modulation with minimum penalized error
+\STATE Demodulate with the selected constellation
+\STATE Calculate BER, SER, packet success, and throughput
+\END ALGORITHMIC
+\end{algorithm}
+
+\section{Design Advantages}
+The system has four important advantages. First, every experiment is
+repeatable because the seed and link parameters are recorded. Second, the
+architecture separates signal recognition from bit recovery, making failure
+analysis possible. Third, it evaluates communication metrics rather than only
+classification accuracy. Finally, the simulated interfaces are suitable for
+future integration with GNU Radio or an SDR device.
