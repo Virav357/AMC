@@ -30,7 +30,7 @@ def table_figure(rows: list[tuple[str, str]], title: str, output: Path) -> None:
             cell.set_text_props(color="white", weight="bold")
         elif row % 2 == 0:
             cell.set_facecolor("#eff6ff")
-    axis.set_title(title, fontsize=20, weight="bold", pad=20)
+    axis.set_title(title, fontsize=18, weight="bold", pad=20)
     output.parent.mkdir(parents=True, exist_ok=True)
     figure.savefig(output, dpi=180, bbox_inches="tight")
     plt.close(figure)
@@ -157,7 +157,7 @@ def main() -> None:
                       xycoords="axes fraction", arrowprops={"arrowstyle": "->", "lw": 2.5, "color": "#64748b"})
     axis.text(0.5, 0.12, "Measured outputs: BER • SER • packet success • throughput • modulation decision accuracy",
               transform=axis.transAxes, ha="center", fontsize=17, weight="bold", color="#1e3a8a")
-    axis.set_title("Phase 2 Core Communication Mechanism", fontsize=23, weight="bold", pad=24)
+    axis.set_title("Adaptive Communication Receiver Mechanism", fontsize=21, weight="bold", pad=24)
     figure.savefig(args.output_dir / "phase2-system-architecture.png", dpi=180, bbox_inches="tight")
     plt.close(figure)
 

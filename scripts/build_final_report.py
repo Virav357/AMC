@@ -18,9 +18,6 @@ def main() -> None:
     data = json.loads(args.link_results.read_text())
     snr = np.asarray(data["snr_db"])
     phase1_accuracy = 0.5394
-    phase1_low_snr = 0.0924
-    phase1_high_snr = 0.8168
-
     figure, axes = plt.subplots(2, 2, figsize=(16, 11))
     ax = axes[0, 0]
     ax.bar(["Phase 1\nAMC baseline", "Phase 2\nadaptive receiver"],
@@ -54,14 +51,8 @@ def main() -> None:
            ylabel="bits/symbol (packet-success weighted)")
     ax.grid(alpha=.25)
 
-    figure.suptitle("SVNIT B.Tech ECE — Phase 1 vs Phase 2 Results", fontsize=24, weight="bold")
-    figure.text(
-        .5, .01,
-        "Phase 1: classification accuracy on RadioML. Phase 2: complete "
-        "transmitter/channel/receiver simulation with BER and packet metrics.",
-        ha="center", fontsize=12,
-    )
-    figure.tight_layout(rect=(0, .04, 1, .95))
+    figure.suptitle("Phase 1 and Phase 2 Experimental Comparison", fontsize=22, weight="bold")
+    figure.tight_layout(rect=(0, .01, 1, .95))
     args.output.parent.mkdir(parents=True, exist_ok=True)
     figure.savefig(args.output, dpi=180)
     print(args.output)

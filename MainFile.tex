@@ -20,20 +20,20 @@
 
 \begin{document}
 
-\title{Design and Performance Evaluation of an Intelligent Adaptive Digital Communication Receiver using Automatic Modulation Classification}
+\title{Phase 2: Design and Performance Evaluation of an Intelligent Adaptive Digital Communication Receiver using Automatic Modulation Classification}
 
 \Degree{Bachelor of Technology}
 \Specialization{Electronics and Communication Engineering}
-\AcadYear{2025-26}
+\AcadYear{2026-27}
 
-\author{Virav Vanani, Surendra Gamit, Hari Gupta}
-\AdmNo{U23EC182, U23EC195, U23EC166}
+\author{Hari Gupta, Virav Vanani, Surendra Gamit}
+\AdmNo{U23EC166, U23EC182, U23EC195}
 
 \GuideName{Dr. Golak Santra}
 \GuidePos{Assistant Professor}
 \GuideAssociation{Department of Electronics and Communication Engineering, SVNIT Surat}
 
-\date{May 2026}
+\date{May 2027}
 
 \MakeTitlePage
 \MakeCerti
@@ -50,14 +50,14 @@ university or institution for the award of any degree or diploma.
 \vspace{2cm}
 \noindent
 \begin{tabular}{p{0.6\textwidth} p{0.3\textwidth}}
+\textbf{Hari Gupta (U23EC166)} & \textbf{Signature:} \rule{4cm}{0.4pt} \\
 \textbf{Virav Vanani (U23EC182)} & \textbf{Signature:} \rule{4cm}{0.4pt} \\
 \textbf{Surendra Gamit (U23EC195)} & \textbf{Signature:} \rule{4cm}{0.4pt} \\
-\textbf{Hari Gupta (U23EC166)} & \textbf{Signature:} \rule{4cm}{0.4pt} \\
 \end{tabular}
 
 \vspace{1cm}
 \noindent
-\textbf{Date: May 2026} \hfill \textbf{Place: Surat}
+\textbf{Date: May 2027} \hfill \textbf{Place: Surat}
 
 \clearemptydoublepage
 \chapter*{Acknowledgment}
@@ -604,18 +604,12 @@ Random seed & 42\\
 \end{tabular}
 \end{table}
 
-\section{Execution Commands}
-The Phase 2 experiment is executed from the repository root:
-\begin{verbatim}
-python scripts/run_phase2_link.py --frames 200 \
-  --output artifacts/phase2-link-results.png
-\end{verbatim}
-The output includes a graph and
-\texttt{artifacts/phase2-link-results.json}. The consolidated comparison
-figure is generated with:
-\begin{verbatim}
-python scripts/build_final_report.py
-\end{verbatim}
+\section{Execution and Result Generation}
+The experiment is executed using the repository scripts documented in the
+appendix. The numerical output is saved as a JSON record, and all report
+figures are generated from that record. This keeps the tables and graphics
+consistent with the measured experiment without placing program commands in
+the main report.
 
 \section{Experiment Reproducibility}
 The final experiment uses seed 42, fixed modulation candidates, a fixed SNR
@@ -651,7 +645,7 @@ their waveform and constellation information is obscured by noise.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{artifacts/phase2-results.png}
+\includegraphics[width=0.92\textwidth]{artifacts/phase2-results.png}
 \caption{Phase 1 confusion matrix and SNR-wise classification accuracy.}
 \label{fig:phase1result}
 \end{figure}
@@ -666,7 +660,7 @@ packet success is 75.5\%, and throughput is 1.888 bits/symbol.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{artifacts/phase2-link-results.png}
+\includegraphics[width=0.92\textwidth]{artifacts/phase2-link-results.png}
 \caption{Phase 2 BER, SER, decision accuracy, packet success, and throughput.}
 \label{fig:phase2result}
 \end{figure}
@@ -674,14 +668,14 @@ packet success is 75.5\%, and throughput is 1.888 bits/symbol.
 \section{Detailed Parameter Records}
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{artifacts/phase1-parameters-results.png}
+\includegraphics[width=0.90\textwidth]{artifacts/phase1-parameters-results.png}
 \caption{Phase 1 model, training, dataset, and result parameters.}
 \label{fig:phase1parameters}
 \end{figure}
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{artifacts/phase2-parameters-results.png}
+\includegraphics[width=0.90\textwidth]{artifacts/phase2-parameters-results.png}
 \caption{Phase 2 communication-link parameters and measured results.}
 \label{fig:phase2parameters}
 \end{figure}
@@ -708,7 +702,7 @@ Representative result & 53.94\% test accuracy & 0.095\% BER at 16 dB\\
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{artifacts/final-phase1-phase2-comparison.png}
+\includegraphics[width=0.92\textwidth]{artifacts/final-phase1-phase2-comparison.png}
 \caption{Consolidated Phase 1 and Phase 2 comparison.}
 \label{fig:comparison}
 \end{figure}
@@ -831,15 +825,12 @@ The complete implementation is maintained in the project repository:
 \item \texttt{scripts/build\_parameter\_figures.py}: parameter figures.
 \end{itemize}
 
-\section{Reproduction Commands}
-\begin{verbatim}
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-python scripts/run_phase2_link.py --frames 200
-python scripts/build_final_report.py
-python scripts/build_parameter_figures.py
-\end{verbatim}
+\section{Reproduction Procedure}
+The repository contains the environment specification, source modules, and
+experiment scripts required to reproduce the results. After installing the
+listed dependencies, the Phase 2 experiment is run for 200 frames per SNR.
+The generated JSON record is then used to create the communication plots,
+parameter tables, and Phase 1--Phase 2 comparison figure.
 
 \section{Generated Outputs}
 The Phase 2 experiment generates

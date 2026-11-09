@@ -129,7 +129,7 @@ def main() -> None:
     axes[1, 1].plot(snrs, adaptive_throughput, "D-", color="#16a34a")
     axes[1, 1].set(xlabel="SNR (dB)", ylabel="bits/symbol", title="Packet-success weighted throughput")
     axes[1, 1].grid(alpha=0.25)
-    figure.suptitle("Phase 2: Intelligent Adaptive Digital Communication Receiver", fontsize=18)
+    figure.suptitle("Adaptive Digital Communication Receiver Results", fontsize=18)
     figure.tight_layout(rect=(0, 0, 1, 0.96))
     figure.savefig(args.output, dpi=180)
     print(json.dumps(result, indent=2))
