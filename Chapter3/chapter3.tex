@@ -1,74 +1,93 @@
-\chapter{Results and Discussion}
+\chapter{Proposed Adaptive Receiver Design}
 
-\section{Experimental Results}
-The Phase 1 trained CNN achieved 53.94\% accuracy on the held-out test set of 33,000
-examples. The best validation accuracy was 54.02\%. Figure
-\ref{fig:phase2results} presents the test confusion matrix and the
-modulation-classification accuracy as a function of SNR.
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=\textwidth]{artifacts/phase2-results.png}
-\caption{Measured Phase 1 CNN baseline results on RadioML 2016.10a.}
-\label{fig:phase2results}
-\end{figure}
-
-\section{SNR-wise Analysis}
-Accuracy was 9.24\% at -20 dB SNR and increased to 81.68\% at +12 dB SNR.
-This trend is expected: at low SNR, noise obscures constellation and
-waveform features, while at higher SNR the learned representation can
-separate modulation families more reliably. Residual confusion is expected
-between modulation types with similar time-domain or constellation
-characteristics.
-
-\section{Discussion}
-The result establishes a reproducible deep-learning baseline rather than a
-claim of perfect real-world receiver performance. The benchmark is synthetic,
-and the experiment does not yet include over-the-air recordings, channel
-transfer mismatch, or hardware impairments. These limitations are important
-when interpreting the result for a practical communication receiver.
-
-\section{Phase 2 Communication-System Results}
-The new communication experiment uses mixed BPSK, QPSK, 8-PSK, and 16-QAM
-frames under block Rayleigh fading, AWGN, carrier phase offset, and frequency
-offset. At 16 dB SNR, the adaptive receiver achieved a BER of 0.095\%,
-SER of 0.172\%, modulation decision accuracy of 100\%, packet success of
-75.5\%, and effective throughput of 1.888 bit/symbol over the 200-frame-per-
-SNR experiment. At 10 dB, decision accuracy was 99.5\%, BER was 4.69\%, and
-SER was 6.94\%. At lower SNR, modulation decisions become unreliable; this is
-an important communication-system result rather than an artificial claim of
-perfect operation.
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=\textwidth]{artifacts/phase2-link-results.png}
-\caption{Phase 2 adaptive communication receiver: BER, decision accuracy, and
-packet success compared with a fixed-QPSK receiver.}
-\label{fig:phase2link}
-\end{figure}
-
-\section{Parameter Summary}
-The baseline and communication-link parameters are summarized in
-Figures~\ref{fig:phase1params} and~\ref{fig:phase2params}. The system
-architecture is shown in Figure~\ref{fig:architecture}.
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=\textwidth]{artifacts/phase1-parameters-results.png}
-\caption{Phase 1 model, training, dataset, and result parameters.}
-\label{fig:phase1params}
-\end{figure}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=\textwidth]{artifacts/phase2-parameters-results.png}
-\caption{Phase 2 communication-link parameters and measured metrics.}
-\label{fig:phase2params}
-\end{figure}
+\section{Overall Architecture}
+The proposed Phase 2 system is organized into five functional stages:
+\begin{enumerate}
+\item random information generation and modulation;
+\item channel and impairment simulation;
+\item receiver synchronization and channel equalization;
+\item modulation estimation and adaptive demodulator selection; and
+\item bit recovery and communication-quality evaluation.
+\end{enumerate}
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{artifacts/phase2-system-architecture.png}
-\caption{Core mechanism of the Phase 2 adaptive communication receiver.}
-\label{fig:architecture}
+\caption{Functional architecture of the Phase 2 adaptive communication
+receiver.}
+\label{fig:phase2architecture}
 \end{figure}
+
+\section{Transmitter}
+For each frame, the simulator generates a random binary sequence. A
+modulation format is selected from BPSK, QPSK, 8-PSK, and 16-QAM. Groups of
+bits are mapped to normalized complex constellation points. The frame length
+is 256 symbols, while the number of transmitted bits depends on the selected
+modulation order.
+
+\section{Channel}
+The channel module applies a single complex Rayleigh coefficient to each
+frame, adds AWGN according to the selected SNR, and applies random carrier
+phase and frequency offsets. The channel is deliberately configurable so
+that future experiments can enable impairments individually or jointly.
+
+\section{Receiver Front-End}
+The receiver first compensates for the simulated channel coefficient and
+carrier impairment. This step represents a pilot-assisted synchronization and
+channel-estimation operation. In a practical SDR, the same function would be
+implemented with a preamble, timing loop, carrier recovery loop, and channel
+estimator.
+
+\section{Modulation Estimator}
+After synchronization, the received symbols are normalized and compared with
+candidate constellations. For each candidate, the minimum phase-invariant
+distance to the constellation is calculated. A small model-complexity penalty
+prevents unnecessarily large constellations from winning solely because they
+provide more candidate points. The modulation with the lowest score is
+selected:
+\begin{equation}
+\hat{m} =
+\arg\min_m \left[
+\frac{1}{N}\sum_{n=1}^{N}
+\min_{a\in\mathcal{C}_m}|z[n]e^{-j\theta}-a|^2
+\lambda\log_2|\mathcal{C}_m|
+\right].
+\end{equation}
+
+\section{Adaptive Demodulation}
+The selected modulation controls the demodulator. Each equalized symbol is
+assigned to its nearest point in the selected constellation, and the
+corresponding binary label is returned. If the modulation decision is
+incorrect, a compatible demodulator is not selected and the packet is likely
+to fail. This produces a direct link between AMC reliability and BER.
+
+\section{Fixed Receiver Baseline}
+For comparison, a fixed-QPSK receiver is also evaluated. It processes every
+frame using the QPSK demodulator regardless of the actual transmitted
+modulation. This baseline demonstrates why receiver adaptation is required
+when the transmitter changes its modulation format.
+
+\section{Algorithm}
+\begin{algorithm}[H]
+\caption{Adaptive communication receiver}
+\begin{algorithmic}[1]
+\STATE Generate random bits and choose modulation $m$
+\STATE Map bits to complex symbols using $\mathcal{C}_m$
+\STATE Apply Rayleigh fading, AWGN, phase offset, and frequency offset
+\STATE Estimate channel and carrier impairment from the pilot-assisted model
+\STATE Equalize and synchronize the received symbols
+\FOR{each candidate modulation}
+\STATE Compute phase-invariant constellation distance
+\ENDFOR
+\STATE Select the candidate with minimum penalized distance
+\STATE Demodulate using the selected constellation
+\STATE Calculate BER, SER, packet success, and throughput
+\END ALGORITHMIC
+\end{algorithm}
+
+\section{Reproducibility}
+All random experiments use seed 42. The final link experiment evaluates 200
+frames at each SNR from -4 dB to +16 dB in 2 dB increments. Results are
+stored in JSON format and figures are generated directly from the stored
+values. This prevents presentation figures from becoming disconnected from
+the numerical experiment.

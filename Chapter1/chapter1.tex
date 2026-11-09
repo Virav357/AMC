@@ -1,34 +1,83 @@
 \chapter{Introduction}
 
-Automatic modulation classification (AMC) is the task of identifying the
-modulation format of a received signal without requiring prior knowledge of
-the transmitter configuration. It is an important function in intelligent
-receivers, spectrum monitoring, cognitive radio, and interference analysis.
-The received signal is represented using its in-phase (I) and quadrature (Q)
-baseband components.
+\section{Background}
+Modern wireless communication systems operate in environments where the
+transmitter, channel, and interference conditions may change continuously.
+An intelligent receiver must therefore perform more than symbol detection
+under a fixed configuration. It should be able to observe the received
+waveform, infer the signal format, select an appropriate processing chain,
+and report the reliability of the recovered information. Automatic modulation
+classification (AMC) is a central function in this adaptive receiver
+architecture.
+
+In a conventional receiver, the modulation format is known in advance. The
+receiver can consequently configure a matched demodulator, synchronizer, and
+decoder before data reception begins. In a non-cooperative or dynamically
+configured system, this assumption is not valid. The receiver may encounter
+BPSK, QPSK, M-PSK, or QAM waveforms without receiving an explicit
+configuration message. AMC addresses this problem by estimating the
+modulation format from the received signal.
 
 \section{Motivation}
-Conventional AMC systems depend on handcrafted signal features and decision
-rules. Their performance can degrade when the signal-to-noise ratio (SNR),
-channel, or transmitter characteristics change. Deep learning provides a
-data-driven alternative that can learn useful time-domain representations
-directly from raw I/Q samples.
+Classical AMC algorithms use statistical moments, cyclostationary features,
+likelihood tests, or constellation-derived rules. These methods are useful
+and interpretable, but their performance can deteriorate when the signal is
+weak, the channel is fading, or the receiver has frequency and phase offsets.
+Deep learning can learn discriminative representations directly from I/Q
+samples and can be integrated with a software-defined receiver
+\cite{oshea2016convolutional}.
+
+The Phase 1 work established a raw-I/Q CNN baseline using RadioML 2016.10a.
+However, a classification score alone does not demonstrate that the receiver
+can successfully recover transmitted information. Phase 2 therefore moves
+from an offline classification problem to a communication-system problem.
+The predicted modulation is used as a control signal for adaptive
+demodulation, and the final evaluation is performed in terms of BER, SER,
+packet success, and throughput.
 
 \section{Problem Statement}
-The objective of this project is to develop and evaluate a reproducible CNN
-classifier for modulation recognition under a range of SNR conditions using
-the RadioML 2016.10a benchmark dataset.
+The problem addressed in this report is the design and evaluation of an
+intelligent adaptive digital communication receiver that can:
+\begin{enumerate}
+\item identify the modulation format of a received signal;
+\item operate under noise, fading, phase offset, and frequency offset;
+\item select a compatible demodulation method automatically; and
+\item quantify the effect of modulation uncertainty on recovered information.
+\end{enumerate}
+
+\section{Aim of Phase 2}
+The aim is to develop a reproducible transmitter--channel--receiver
+simulation that demonstrates how AMC can be used as a communication control
+function rather than as an isolated classifier. The project is intentionally
+software-based so that every channel parameter and experiment can be repeated
+before future validation with an SDR platform.
 
 \section{Objectives}
 \begin{enumerate}
-\item Prepare and normalize labeled complex baseband I/Q samples.
-\item Design a compact one-dimensional CNN for modulation classification.
-\item Train the network using class-weighted loss and reproducible splits.
-\item Evaluate overall accuracy, confusion between classes, and SNR-wise
-      performance.
+\item Retain the Phase 1 RadioML CNN as a measured baseline.
+\item Implement BPSK, QPSK, 8-PSK, and 16-QAM transmitters and demodulators.
+\item Model AWGN, block-Rayleigh fading, carrier phase offset, and frequency
+      offset.
+\item Implement synchronization, channel equalization, modulation selection,
+      and adaptive demodulation.
+\item Measure BER, SER, packet success, throughput, and decision accuracy over
+      a range of SNR values.
+\item Compare the adaptive receiver with a fixed-QPSK receiver.
+\item Prepare a reproducible and professionally documented Phase 2 report.
 \end{enumerate}
 
-\section{Organization}
-Chapter 2 describes the dataset, preprocessing, model architecture, and
-training procedure. Chapter 3 presents the measured results and discusses
-limitations and future improvements.
+\section{Contributions}
+The main contribution is a communication-domain extension of the Phase 1
+classifier. The work connects the signal-recognition stage to the physical
+layer data path. It also introduces a multi-metric evaluation framework:
+classification accuracy is complemented by BER, SER, packet success, and
+effective throughput. This distinction is important because a correct
+modulation decision is useful only when it leads to reliable bit recovery.
+
+\section{Organization of the Report}
+Chapter 2 reviews the communication principles and mathematical models used
+in the project. Chapter 3 presents the proposed system architecture and
+algorithms. Chapter 4 describes the software implementation, Phase 1
+training, and Phase 2 experiment configuration. Chapter 5 presents the
+measured results and comparison with Phase 1. The final chapter summarizes
+the work, discusses limitations, and identifies future extensions.

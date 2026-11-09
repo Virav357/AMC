@@ -1,5 +1,29 @@
-% abstract.tex (Abstract)
-
 \chapter*{Abstract}
 
-Automatic modulation classification (AMC) is a key capability for intelligent receivers, spectrum monitoring, and cognitive radio networks where signals must be identified without prior coordination. Traditional AMC approaches rely on handcrafted features and expert rules, which can degrade under channel impairments and mismatched conditions. Recent advances in deep learning enable data-driven models to learn discriminative representations directly from raw I/Q samples, making AMC more robust in real-world environments. This report presents a compact convolutional neural network (CNN) for classifying modulation types from the RadioML 2016.10a dataset, which contains labeled complex baseband signals across multiple modulation families and a wide range of signal-to-noise ratios (SNRs). The workflow includes per-sample power normalization, label encoding, and a deterministic stratified train/validation/test split. The CNN uses stacked one-dimensional convolutional blocks with batch normalization, ReLU activations, max-pooling, adaptive average pooling, and dropout. Training uses class-weighted cross-entropy, the AdamW optimizer, and cosine learning-rate scheduling. On the held-out test set, the trained model achieves 53.94\% accuracy. Accuracy increases from 9.24\% at -20 dB SNR to 81.68\% at +12 dB SNR, confirming the strong effect of channel noise. The confusion matrix shows remaining ambiguity among closely related modulation families. The study establishes a reproducible Phase 2 baseline and identifies future directions including data augmentation, deeper architectures, calibration, domain adaptation, and over-the-air SDR validation.
+Automatic modulation classification (AMC) is an important receiver function in
+cognitive radio, spectrum monitoring, adaptive wireless communication, and
+interference analysis. A Phase 1 implementation of this project developed a
+compact convolutional neural network (CNN) that classified raw in-phase and
+quadrature (I/Q) samples from the RadioML 2016.10a dataset. The Phase 1
+classifier achieved 53.94\% accuracy on a held-out test set, but its output
+was not connected to a complete communication receiver.
+
+This Phase 2 work extends the classifier into an intelligent adaptive digital
+communication system. The proposed system generates random information bits,
+maps them to BPSK, QPSK, 8-PSK, or 16-QAM symbols, transmits them through an
+AWGN and block-Rayleigh channel with carrier phase and frequency offsets, and
+performs synchronization and channel equalization at the receiver. The
+modulation decision is then used to select the demodulator automatically.
+Unlike the Phase 1 study, the evaluation measures communication-level
+quantities: bit error rate (BER), symbol error rate (SER), packet success
+rate, effective throughput, and modulation-decision accuracy.
+
+In the final experiment, 200 frames were evaluated at each SNR from -4 dB to
+16 dB. At 16 dB, the adaptive receiver achieved 0.095\% BER, 0.172\% SER,
+100\% modulation-decision accuracy, 75.5\% packet success, and 1.888
+bits/symbol effective throughput. At 10 dB, it achieved 4.69\% BER and 99.5\%
+decision accuracy. These results demonstrate the new communication-system
+contribution of Phase 2, while also showing the low-SNR region in which
+modulation ambiguity causes packet failures. The report presents the
+communication theory, system architecture, software implementation, training
+parameters, measured results, limitations, and future SDR-based extensions.
