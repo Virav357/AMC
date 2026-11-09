@@ -1,0 +1,73 @@
+{
+  "phase1": {
+    "dataset": "RadioML 2016.10a",
+    "input_shape": [
+      2,
+      128
+    ],
+    "classes": 11,
+    "split": {
+      "train": 0.7,
+      "validation": 0.15,
+      "test": 0.15
+    },
+    "model": "3 Conv1D blocks, batch normalization, ReLU, max-pooling, adaptive average pooling, dropout",
+    "trainable_parameters": 144331,
+    "loss": "class-weighted cross-entropy",
+    "optimizer": "AdamW",
+    "weight_decay": 0.0001,
+    "scheduler": "CosineAnnealingLR",
+    "batch_size": 1024,
+    "epochs": 8,
+    "learning_rate": 0.0003,
+    "seed": 42,
+    "test_accuracy": 0.5394,
+    "best_validation_accuracy": 0.5402
+  },
+  "phase2": {
+    "transmitter_modulations": [
+      "BPSK",
+      "QPSK",
+      "8PSK",
+      "16QAM"
+    ],
+    "frame_symbols": 256,
+    "channel": [
+      "block Rayleigh fading",
+      "AWGN"
+    ],
+    "impairments": [
+      "phase offset",
+      "frequency offset"
+    ],
+    "snr_db": [
+      -4,
+      -2,
+      0,
+      2,
+      4,
+      6,
+      8,
+      10,
+      12,
+      14,
+      16
+    ],
+    "frames_per_snr": 200,
+    "seed": 42,
+    "metrics": [
+      "BER",
+      "SER",
+      "modulation decision accuracy",
+      "packet success",
+      "throughput"
+    ],
+    "best_operating_point": {
+      "snr_db": 16,
+      "ber": 0.0009479602510460251,
+      "ser": 0.00171875,
+      "decision_accuracy": 1.0,
+      "packet_success": 0.755
+    }
+  }
+}

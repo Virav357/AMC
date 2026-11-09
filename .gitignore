@@ -9,4 +9,9 @@ artifacts/*
 !artifacts/phase2-link-results.png
 !artifacts/phase2-link-results.json
 !artifacts/final-phase1-phase2-comparison.png
+!artifacts/phase1-parameters-results.png
+!artifacts/phase1-training-history.png
+!artifacts/phase2-parameters-results.png
+!artifacts/phase2-system-architecture.png
+!artifacts/results-manifest.json
 data/

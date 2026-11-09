@@ -48,6 +48,10 @@ The final comparison figure is
 [`artifacts/final-phase1-phase2-comparison.png`](artifacts/final-phase1-phase2-comparison.png),
 with the written interpretation in [`FINAL_PHASE2_REPORT.md`](FINAL_PHASE2_REPORT.md).
 
+Additional panel figures include the Phase 1 parameter/training record, Phase
+2 parameter record, and Phase 2 mechanism diagram. The exact values are also
+stored in [`artifacts/results-manifest.json`](artifacts/results-manifest.json).
+
 ## Setup
 
 ```bash

@@ -1,7 +1,7 @@
 \chapter{Results and Discussion}
 
 \section{Experimental Results}
-The trained CNN achieved 53.94\% accuracy on the held-out test set of 33,000
+The Phase 1 trained CNN achieved 53.94\% accuracy on the held-out test set of 33,000
 examples. The best validation accuracy was 54.02\%. Figure
 \ref{fig:phase2results} presents the test confusion matrix and the
 modulation-classification accuracy as a function of SNR.
@@ -9,7 +9,7 @@ modulation-classification accuracy as a function of SNR.
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{artifacts/phase2-results.png}
-\caption{Measured Phase 2 CNN results on RadioML 2016.10a.}
+\caption{Measured Phase 1 CNN baseline results on RadioML 2016.10a.}
 \label{fig:phase2results}
 \end{figure}
 
@@ -32,10 +32,11 @@ when interpreting the result for a practical communication receiver.
 The new communication experiment uses mixed BPSK, QPSK, 8-PSK, and 16-QAM
 frames under block Rayleigh fading, AWGN, carrier phase offset, and frequency
 offset. At 16 dB SNR, the adaptive receiver achieved a BER of 0.095\%,
-modulation decision accuracy of 100\%, and packet success of 75.5\% over the
-200-frame-per-SNR experiment. At 10 dB, decision accuracy was 99.5\% and BER
-was 4.69\%. At lower SNR, modulation decisions become unreliable; this is an
-important communication-system result rather than an artificial claim of
+SER of 0.172\%, modulation decision accuracy of 100\%, packet success of
+75.5\%, and effective throughput of 1.888 bit/symbol over the 200-frame-per-
+SNR experiment. At 10 dB, decision accuracy was 99.5\%, BER was 4.69\%, and
+SER was 6.94\%. At lower SNR, modulation decisions become unreliable; this is
+an important communication-system result rather than an artificial claim of
 perfect operation.
 
 \begin{figure}[H]
@@ -44,4 +45,30 @@ perfect operation.
 \caption{Phase 2 adaptive communication receiver: BER, decision accuracy, and
 packet success compared with a fixed-QPSK receiver.}
 \label{fig:phase2link}
+\end{figure}
+
+\section{Parameter Summary}
+The baseline and communication-link parameters are summarized in
+Figures~\ref{fig:phase1params} and~\ref{fig:phase2params}. The system
+architecture is shown in Figure~\ref{fig:architecture}.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{artifacts/phase1-parameters-results.png}
+\caption{Phase 1 model, training, dataset, and result parameters.}
+\label{fig:phase1params}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{artifacts/phase2-parameters-results.png}
+\caption{Phase 2 communication-link parameters and measured metrics.}
+\label{fig:phase2params}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{artifacts/phase2-system-architecture.png}
+\caption{Core mechanism of the Phase 2 adaptive communication receiver.}
+\label{fig:architecture}
 \end{figure}

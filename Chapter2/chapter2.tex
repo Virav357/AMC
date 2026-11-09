@@ -30,6 +30,13 @@ $3\times10^{-4}$, and eight training epochs. The implementation is available
 in \texttt{scripts/train.py}; evaluation is implemented in
 \texttt{scripts/evaluate.py}.
 
+\subsection{Phase 1 Training Parameters}
+The baseline contains 144,331 trainable parameters. Its convolutional filters
+are 64, 128, and 256 channels with kernel sizes 7, 5, and 3, respectively.
+The model is trained with a batch size of 1024, learning rate
+$3\times10^{-4}$, AdamW weight decay $10^{-4}$, cosine annealing, class
+weights, seed 42, and eight epochs in the reported experiment.
+
 \section{Communication-Link Experiment}
 The Phase 2 experiment adds a complete digital-link simulation around the
 classifier baseline. Random bits are modulated using BPSK, QPSK, 8-PSK, or
@@ -39,3 +46,13 @@ channel equalization are applied before modulation selection. The proposed
 adaptive receiver selects a demodulator from the estimated modulation and is
 compared with a receiver fixed to QPSK. BER, packet success, and modulation
 decision accuracy are measured over SNR.
+
+\subsection{Phase 2 Core Mechanism}
+Unlike Phase 1, the classifier output is connected to receiver control. The
+transmitter creates a random information frame and maps it to BPSK, QPSK,
+8-PSK, or 16-QAM. The channel applies block Rayleigh fading, AWGN, carrier
+phase offset, and frequency offset. After pilot-assisted synchronization and
+equalization, the receiver estimates the constellation and selects the
+corresponding demodulator. Recovered bits are compared with the original
+frame, producing BER, SER, packet-success, throughput, and decision-accuracy
+measurements.
