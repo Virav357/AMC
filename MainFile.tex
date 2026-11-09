@@ -1,110 +1,895 @@
-% MainFile.tex
-
 \documentclass[12pt,twoside,openright]{report}
 
 \usepackage{svniteced_project}
-%\usepackage{svniteced_thesis}
-%\usepackage{svniteced_D_prelims}
-\usepackage{graphics} 
+\usepackage{fancybox}
 \usepackage{graphicx}
-\usepackage{color}
-\usepackage[dvipsnames]{xcolor}
-\usepackage{epstopdf}
-\usepackage{multirow}
-\usepackage{subfigure}
+\usepackage{geometry}
+\usepackage{setspace}
+\usepackage{booktabs}
 \usepackage{float}
+\usepackage{url}
 \usepackage{amsmath}
+\usepackage{amssymb}
 \usepackage{array}
+\usepackage{hyperref}
+\usepackage{cite}
+\hypersetup{colorlinks=true,linkcolor=black,citecolor=black,urlcolor=blue}
+\usepackage{fancyhdr}
 \usepackage{algorithm}
 \usepackage{algorithmic}
-\usepackage{verbatim}
-\usepackage{times}
-\usepackage{fancyhdr}
-\usepackage{rotating}
-%\usepackage{fancyheadings}
-\usepackage{footnote}
-\usepackage{morefloats}
-\usepackage{amsfonts}
-\usepackage{amssymb}
-\usepackage{type1cm}
-\usepackage{eso-pic}
-\usepackage{fancybox}
-\usepackage{lipsum}
-\usepackage{geometry}
-\usepackage{makeidx}
-\usepackage[justification=centering]{caption}
-\usepackage{afterpage}
-\usepackage{lscape}
-\usepackage{longtable}
-\usepackage{cite}
-\usepackage{float}
-\usepackage{amsmath}
-\usepackage[colorlinks=true,linkcolor=blue]{hyperref}
-\usepackage{multirow}
-%\usepackage{verbatim}
-\begin{document}
 
-% Title of the Project
+\begin{document}
 
 \title{Design and Performance Evaluation of an Intelligent Adaptive Digital Communication Receiver using Automatic Modulation Classification}
 
-\Degree{ Bachelor of Technology}
-\Specialization{Electronics and Communication}
+\Degree{Bachelor of Technology}
+\Specialization{Electronics and Communication Engineering}
 \AcadYear{2025-26}
 
-\author{ABC, DEF, GHI}
-\AdmNo{U23EC---, U23EC---, U23EC---}
+\author{Virav Vanani, Surendra Gamit, Hari Gupta}
+\AdmNo{U23EC182, U23EC195, U23EC166}
 
-%For example
-\GuideName{Dr. XYZ}						%\GuideName{Mr. X Y Z}
-\GuidePos{(Assistant Professor/Associate Professor/Professor)}
-\GuideAssociation{DoECE}							%\GuideAssociation{ECED}
-
-% If there is Co-Guide, please enter the following fields.
-% If there is no Co-Guide, either comment the lines or delete them. Don't leave them blank.
-%\CoGuideName{Enter your Co-Guide's name}
-%\CoGuidePosn{Assistant Professor / Associate Professor}
-%\CoGuideAssociation{Co-Guide's Dept}
+\GuideName{Dr. Golak Santra}
+\GuidePos{Assistant Professor}
+\GuideAssociation{Department of Electronics and Communication Engineering, SVNIT Surat}
 
 \date{May 2026}
 
 \MakeTitlePage
-
 \MakeCerti
+\pagestyle{empty}
 
-\Acknowledgement{acknowl}
-\Abstract{abstract}
+\clearemptydoublepage
+\chapter*{Declaration}
+\addcontentsline{toc}{chapter}{\textbf{Declaration}}
+We hereby declare that the work presented in this report is original and has
+been carried out by us under the guidance of \textbf{Dr. Golak Santra}. This
+report has not been submitted, either in part or in full, to any other
+university or institution for the award of any degree or diploma.
+
+\vspace{2cm}
+\noindent
+\begin{tabular}{p{0.6\textwidth} p{0.3\textwidth}}
+\textbf{Virav Vanani (U23EC182)} & \textbf{Signature:} \rule{4cm}{0.4pt} \\
+\textbf{Surendra Gamit (U23EC195)} & \textbf{Signature:} \rule{4cm}{0.4pt} \\
+\textbf{Hari Gupta (U23EC166)} & \textbf{Signature:} \rule{4cm}{0.4pt} \\
+\end{tabular}
+
+\vspace{1cm}
+\noindent
+\textbf{Date: May 2026} \hfill \textbf{Place: Surat}
+
+\clearemptydoublepage
+\chapter*{Acknowledgment}
+\addcontentsline{toc}{chapter}{\textbf{Acknowledgment}}
+We express our sincere gratitude to our project guide, Dr. Golak Santra, for
+his valuable guidance, continuous support, and constructive suggestions
+throughout this project. We are thankful to the faculty of the Department of
+Electronics and Communication Engineering, SVNIT Surat, for providing the
+necessary academic environment and resources. We also thank our institute for
+encouraging project-based learning and research. Finally, we acknowledge the
+teamwork and dedication of all group members in completing this project.
+
+\clearemptydoublepage
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{\textbf{Abstract}}
+Automatic modulation classification (AMC) is an important receiver function
+for cognitive radio, spectrum monitoring, adaptive wireless communication,
+and non-cooperative signal analysis. In Phase 1 of this project, a compact
+convolutional neural network was trained to classify raw in-phase and
+quadrature samples from the RadioML 2016.10a dataset. Although the baseline
+classifier achieved 53.94\% accuracy on the held-out test set, its output was
+not connected to the operation of a complete communication receiver.
+
+This Phase 2 project extends the work from classification to an intelligent
+adaptive digital communication receiver. The proposed system generates random
+information bits, maps them to BPSK, QPSK, 8-PSK, or 16-QAM symbols, transmits
+them through a block-Rayleigh and additive white Gaussian noise channel, and
+models carrier phase and frequency offsets. At the receiver, pilot-assisted
+synchronization and channel equalization are applied before estimating the
+modulation format. The estimated modulation controls the demodulator, after
+which recovered bits are compared with the transmitted bits.
+
+Unlike Phase 1, the evaluation includes bit error rate (BER), symbol error
+rate (SER), packet success rate, effective throughput, and modulation-decision
+accuracy. The final experiment evaluates 200 frames at every SNR from -4 dB
+to 16 dB. At 16 dB SNR, the adaptive receiver achieves 0.095\% BER, 0.172\%
+SER, 100\% modulation-decision accuracy, 75.5\% packet success, and 1.888
+bits/symbol effective throughput. At 10 dB, it achieves 4.69\% BER and 99.5\%
+decision accuracy. The report presents the communication theory, literature
+background, dataset, Phase 1 CNN, Phase 2 receiver mechanism, implementation,
+training parameters, results, limitations, and future SDR extensions.
+
+\clearemptydoublepage
+\chapter*{List of Abbreviations}
+\addcontentsline{toc}{chapter}{\textbf{List of Abbreviations}}
+\begin{tabular}{ll}
+AMC & Automatic Modulation Classification \\
+AWGN & Additive White Gaussian Noise \\
+BER & Bit Error Rate \\
+CNN & Convolutional Neural Network \\
+I/Q & In-phase and Quadrature \\
+SNR & Signal-to-Noise Ratio \\
+SER & Symbol Error Rate \\
+PSK & Phase Shift Keying \\
+QAM & Quadrature Amplitude Modulation \\
+RF & Radio Frequency \\
+SDR & Software Defined Radio \\
+PHY & Physical Layer \\
+CSI & Channel State Information \\
+AGC & Automatic Gain Control \\
+DL & Deep Learning \\
+\end{tabular}
 
 \TableOfContents
 \ListOfFigures
 \ListOfTables
-\Abbreviations{abbreviations}
 
 \StartBody
-\Chapter{Chapter1/chapter1}
-\Chapter{Chapter2/chapter2}
-\Chapter{Chapter3/chapter3}
-\Chapter{Chapter4/chapter4}
-\Chapter{Chapter5/chapter5}
-\Chapter{Chapter6/chapter6}
-\Chapter{Chapter7/chapter7}
-\Chapter{conclusion}
-%\include{summary}
+\pagestyle{fancy}
+
+\chapter{Introduction}
+
+\section{Motivation and Background}
+Modern wireless communication systems operate in congested and dynamic
+spectrum environments. A receiver may encounter different transmitters,
+unknown waveforms, changing channel conditions, and interference from
+coexisting systems. A conventional receiver generally assumes that the
+modulation scheme, synchronization method, and processing configuration are
+known in advance. This assumption is not valid in a non-cooperative or
+adaptive communication environment.
+
+Automatic modulation classification allows a receiver to identify the
+modulation format from received samples before demodulation. It supports
+cognitive radio, spectrum monitoring, electronic support systems,
+interference analysis, and adaptive physical-layer processing
+\cite{haykin2005cognitive,proakis2001digital}. Traditional AMC methods use
+higher-order statistics, cyclostationary features, likelihood tests, or
+expert-designed rules. These approaches are useful, but they can become
+sensitive to noise, fading, frequency offset, phase offset, and mismatch
+between the assumed channel and the actual channel.
+
+Deep learning provides a data-driven approach in which discriminative signal
+representations are learned from I/Q samples. Convolutional neural networks
+have shown that raw complex baseband samples can be used without manually
+constructing every feature \cite{oshea2016cnn,goodfellow2016dl}. The Phase 1
+part of this project established such a CNN baseline. Phase 2 uses the
+recognition result as a receiver-control decision rather than treating it as
+the final output.
+
+\section{Applications of the Proposed Receiver}
+The proposed adaptive receiver is relevant to spectrum monitoring systems,
+where a monitoring node must identify and process unknown signals. It is also
+relevant to cognitive radio, where the receiver can select a compatible
+demodulator after sensing the waveform. In an adaptive wireless link,
+modulation recognition can support mode selection, link adaptation, and
+interference-aware processing. In a software-defined radio, the same
+architecture can be connected to an SDR front-end after simulation
+validation.
+
+\section{Problem Definition}
+\textbf{Problem Statement:} Design and evaluate an intelligent digital
+communication receiver that identifies the transmitted modulation and uses
+that decision to recover information bits under noise, fading, phase offset,
+and frequency offset.
+
+The project is divided into two connected stages. Phase 1 addresses the
+classification problem using labeled RadioML I/Q examples. Phase 2 addresses
+the communication problem using a complete transmitter--channel--receiver
+simulation. The second stage is evaluated using communication metrics rather
+than classification accuracy alone.
+
+\section{Objectives}
+\begin{itemize}
+\item Retain the Phase 1 RadioML CNN as a measured baseline.
+\item Implement BPSK, QPSK, 8-PSK, and 16-QAM transmitters and demodulators.
+\item Model AWGN, block-Rayleigh fading, phase offset, and frequency offset.
+\item Implement synchronization, equalization, modulation estimation, and
+      adaptive demodulator selection.
+\item Measure BER, SER, packet success, effective throughput, and decision
+      accuracy over SNR.
+\item Compare the adaptive receiver with a receiver fixed to QPSK.
+\item Prepare a reproducible software structure suitable for later SDR
+      integration.
+\end{itemize}
+
+\section{Contributions}
+The main contribution is a communication-domain extension of the Phase 1 AMC
+baseline. The Phase 2 system connects waveform recognition to the physical
+layer data path. It creates a measurable relationship between modulation
+decision errors and bit-recovery errors. It also introduces a reproducible
+multi-metric evaluation including BER, SER, packet success, and throughput.
+
+\section{Scope and Limitations}
+The report focuses on a software simulation with configurable modulation and
+channel parameters. The channel estimate and carrier correction are
+pilot-assisted, and the current Phase 2 link uses an interpretable
+constellation-distance estimator. Pulse shaping, timing-loop implementation,
+forward-error correction, retransmission, and over-the-air SDR measurements
+are outside the current scope and are included as future work.
+
+\section{Organization of the Report}
+Chapter 2 reviews classical AMC, deep learning for radio signals, benchmark
+datasets, and the research gap. Chapter 3 presents communication theory and
+the mathematical signal model. Chapter 4 describes the RadioML dataset,
+preprocessing, and Phase 1 baseline. Chapter 5 explains the proposed Phase 2
+receiver methodology and model design. Chapter 6 describes implementation and
+experimental setup. Chapter 7 presents results and discussion. Chapter 8
+concludes the report and describes future work.
+
+\chapter{Literature Review}
+
+\section{Classical AMC Approaches}
+Early AMC methods used statistical moments, cumulants, likelihood functions,
+and cyclostationary features. Higher-order statistics can separate several
+modulation families because the statistical distribution of the received
+signal changes with the waveform. Cyclostationary methods exploit periodic
+features introduced by symbol timing, carrier structure, or framing
+\cite{gardner1988,azzouznandi1996}. These approaches are mathematically
+interpretable, but their performance depends on the selected features,
+observation length, and assumed channel model.
+
+\section{Likelihood-Based and Feature-Based Methods}
+Likelihood-based AMC compares the received signal with a probabilistic model
+for every candidate modulation. When the channel and noise parameters are
+accurately known, likelihood methods can be strong. In practical systems,
+however, unknown fading, frequency offset, timing error, and hardware
+nonlinearity make the required likelihood model difficult to maintain.
+Feature-based systems reduce complexity by extracting moments, spectral
+features, or cyclic features before a conventional classifier is applied.
+
+\section{Deep Learning for AMC}
+Deep learning changed the AMC workflow by allowing models to learn
+representations directly from raw I/Q sequences. O'Shea and collaborators
+demonstrated convolutional radio modulation recognition using the RadioML
+benchmark \cite{oshea2016dataset,oshea2016cnn}. CNNs are suitable for I/Q
+signals because convolution can detect local waveform patterns, phase
+relationships, and short temporal structures. Batch normalization, pooling,
+and dropout can improve optimization and generalization.
+
+\section{Over-the-Air Generalization}
+Synthetic datasets are useful for controlled benchmarking, but a model
+trained only on simulated signals may not generalize to a physical receiver.
+Over-the-air work has shown that hardware effects, unknown filtering,
+frequency offset, oscillator instability, and multipath can reduce
+performance compared with an ideal simulation \cite{oshea2018ota}. Therefore,
+Phase 2 includes explicit channel and carrier impairments and clearly states
+that SDR validation remains a future step.
+
+\section{Benchmark Datasets and Frameworks}
+RadioML 2016.10a remains a widely used AMC benchmark because it provides
+labeled I/Q samples for several modulation classes and a broad SNR range.
+PyTorch is used in this project for the Phase 1 model and data pipeline
+because it supports compact research implementations and reproducible
+training workflows \cite{pytorchdocs}.
+
+\section{Representative Studies}
+\begin{table}[H]
+\centering
+\caption{Representative work related to the project.}
+\label{tab:literature}
+\begin{tabular}{p{0.25\textwidth} p{0.25\textwidth} p{0.38\textwidth}}
+\toprule
+\textbf{Reference} & \textbf{Approach} & \textbf{Observation}\\
+\midrule
+Gardner~\cite{gardner1988} & Cyclostationary analysis &
+Analytical features can identify periodic signal structure.\\
+Azzouz and Nandi~\cite{azzouznandi1996} & Statistical AMC &
+Feature design and channel assumptions strongly affect performance.\\
+O'Shea \textit{et al.}~\cite{oshea2016cnn} & CNN on raw I/Q &
+Deep models can learn modulation representations directly from samples.\\
+O'Shea \textit{et al.}~\cite{oshea2018ota} & Over-the-air classification &
+Hardware and channel realism are important for deployment.\\
+This project & Adaptive communication receiver &
+AMC output controls demodulation and is evaluated with BER and link metrics.\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Research Gap}
+Many AMC studies end after predicting a modulation label. This leaves an
+important engineering question unanswered: does the prediction improve
+recovery of the transmitted information? Phase 2 addresses this gap by
+connecting modulation estimation to adaptive demodulation and evaluating the
+complete information path. The result is not only a new classifier but a new
+communication-system experiment.
+
+\chapter{Theoretical Background}
+
+\section{Complex Baseband Signal}
+A passband signal can be represented in complex baseband form using
+\begin{equation}
+x(t)=I(t)+jQ(t),
+\end{equation}
+where $I(t)$ is the in-phase component and $Q(t)$ is the quadrature
+component. The two components preserve amplitude and phase information in a
+form suitable for digital signal processing.
+
+\section{Discrete-Time Channel Model}
+For a transmitted complex symbol sequence $x[n]$, the Phase 2 receiver uses
+\begin{equation}
+y[n] = h[n]x[n]e^{j(2\pi\Delta f n+\phi)} + w[n],
+\end{equation}
+where $h[n]$ is the complex channel coefficient, $\Delta f$ is normalized
+frequency offset, $\phi$ is carrier phase offset, and $w[n]$ is complex
+AWGN. The block-Rayleigh model keeps $h[n]$ constant within a frame and
+changes it between frames.
+
+\section{Digital Modulation}
+\textbf{BPSK:} Binary phase shift keying uses two phase states and carries one
+bit per symbol. It provides large decision regions and is relatively robust
+to noise.
+
+\textbf{QPSK:} Quadrature phase shift keying uses four phase states and
+carries two bits per symbol. It is widely used because it balances spectral
+efficiency and robustness.
+
+\textbf{8-PSK:} Eight phase states carry three bits per symbol. The smaller
+angular separation makes it more sensitive to noise than QPSK.
+
+\textbf{16-QAM:} Sixteen amplitude-phase points carry four bits per symbol.
+It offers higher spectral efficiency but requires better SNR and accurate
+amplitude and phase recovery.
+
+\section{AWGN and SNR}
+The noise power is chosen using
+\begin{equation}
+\mathrm{SNR}_{dB}=10\log_{10}\left(\frac{P_s}{P_n}\right),
+\end{equation}
+where $P_s$ is signal power and $P_n$ is noise power. For a selected SNR,
+the complex noise variance is scaled so that all modulation formats can be
+compared under a common power convention.
+
+\section{Rayleigh Fading}
+When no dominant line-of-sight path exists, the complex channel coefficient
+can be modeled as
+\begin{equation}
+h=\frac{h_I+jh_Q}{\sqrt{2}},
+\quad h_I,h_Q\sim\mathcal{N}(0,1).
+\end{equation}
+The amplitude $|h|$ fluctuates from frame to frame, creating deep fades and
+changing the effective received SNR.
+
+\section{Phase and Frequency Offset}
+Carrier mismatch rotates the signal by
+\begin{equation}
+c[n]=e^{j(\phi+2\pi\Delta f n)}.
+\end{equation}
+Frequency offset creates a phase rotation that changes with time. A practical
+receiver estimates these parameters using a preamble or pilot and compensates
+them before demodulation.
+
+\section{Synchronization and Equalization}
+The simulation represents pilot-assisted synchronization by using the
+frame-level channel and carrier estimates. Equalization is performed using
+\begin{equation}
+\hat{x}[n]=\frac{y[n]}{h}.
+\end{equation}
+The corrected signal is then rotated by the inverse phase and frequency
+offset. In a future SDR implementation this block would contain AGC, timing
+recovery, carrier recovery, and a channel estimator.
+
+\section{Communication Metrics}
+The bit error rate is
+\begin{equation}
+\mathrm{BER}=
+\frac{N_{\mathrm{bit,error}}}{N_{\mathrm{bit,total}}}.
+\end{equation}
+The symbol error rate is
+\begin{equation}
+\mathrm{SER}=
+\frac{N_{\mathrm{symbol,error}}}{N_{\mathrm{symbol,total}}}.
+\end{equation}
+A packet is successful only when every bit in its frame is recovered
+correctly. Effective throughput is calculated as the average bits per symbol
+weighted by packet success.
+
+\section{Phase 1 and Phase 2 Difference}
+Phase 1 is an offline recognition problem: a labeled I/Q example is mapped
+to a class label. Phase 2 is a physical-layer receiver problem: bits are
+generated, transmitted through a channel, recognized, demodulated, and
+compared with the original bits. Thus, Phase 2 measures the practical
+communication consequence of recognition errors.
+
+\chapter{Dataset and Preprocessing}
+
+\section{RadioML 2016.10a Dataset}
+RadioML 2016.10a contains synthetic complex baseband samples generated for
+automatic modulation classification research. It includes 11 classes:
+8PSK, AM-DSB, AM-SSB, BPSK, CPFSK, GFSK, PAM4, QAM16, QAM64, QPSK, and WBFM.
+The SNR values range from -20 dB to 18 dB in 2 dB increments. Each example
+contains 128 complex samples represented by two real-valued channels.
+
+\section{Phase 1 Class Categories}
+\begin{table}[H]
+\centering
+\caption{RadioML classes used by the Phase 1 baseline.}
+\label{tab:classes}
+\begin{tabular}{p{0.34\textwidth} p{0.45\textwidth}}
+\toprule
+\textbf{Classes} & \textbf{Category}\\
+\midrule
+8PSK, BPSK, QPSK & Phase shift keying\\
+QAM16, QAM64 & Quadrature amplitude modulation\\
+PAM4 & Pulse amplitude modulation\\
+CPFSK, GFSK & Frequency shift keying\\
+AM-DSB, AM-SSB & Analog amplitude modulation\\
+WBFM & Analog frequency modulation\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Loading and Label Encoding}
+The dataset is stored as a dictionary indexed by modulation and SNR. The
+loader concatenates all groups, assigns an integer label to every modulation,
+and records the SNR value for later analysis. Class names are sorted and stored
+with the trained checkpoint so that evaluation uses a fixed class ordering.
+
+\section{Power Normalization}
+Each I/Q example is normalized using
+\begin{equation}
+\tilde{x}=
+\frac{x}{\sqrt{\operatorname{mean}(x^2)+\epsilon}},
+\end{equation}
+where $\epsilon$ avoids division by zero. Normalization prevents examples
+with different absolute power levels from dominating the learning process.
+The relative I/Q structure and temporal waveform remain available to the
+network.
+
+\section{Train, Validation, and Test Split}
+The Phase 1 baseline uses a deterministic stratified split: 70\% training,
+15\% validation, and 15\% testing. Stratification preserves the class
+distribution across subsets and reduces the possibility that a split is
+biased toward particular modulation classes.
+
+\section{Data Loading and Batching}
+The normalized NumPy arrays are converted into PyTorch tensors. Each sample
+has shape $(2,128)$ and each label is an integer tensor. The training loader
+shuffles samples, while validation and test loaders preserve deterministic
+evaluation order. This structure enables the same preprocessing logic to be
+used by future experiments.
+
+\section{Dataset Limitations}
+RadioML is valuable for controlled comparison, but it is synthetic. It does
+not fully represent antenna effects, analog filtering, oscillator phase noise,
+frequency-selective multipath, or hardware nonlinearity. Therefore, the
+dataset result should be treated as a reproducible baseline and not as a
+direct guarantee of over-the-air performance.
+
+\chapter{Proposed Methodology and Model Design}
+
+\section{End-to-End Phase 1 Pipeline}
+The Phase 1 pipeline is:
+\begin{equation}
+\text{I/Q samples}
+\rightarrow\text{normalization}
+\rightarrow\text{CNN}
+\rightarrow\text{modulation label}.
+\end{equation}
+The baseline model receives the two I/Q channels and produces one logit for
+each of the 11 RadioML classes.
+
+\section{Phase 1 CNN Architecture}
+The CNN uses three one-dimensional convolutional blocks. The first block has
+64 filters with kernel size 7, the second has 128 filters with kernel size 5,
+and the third has 256 filters with kernel size 3. Each block contains
+convolution, batch normalization, ReLU, and max-pooling. Adaptive average
+pooling produces a fixed-size feature vector, followed by dropout and an
+11-class linear output layer.
+
+\begin{table}[H]
+\centering
+\caption{Phase 1 CNN parameters.}
+\label{tab:cnnparameters}
+\begin{tabular}{p{0.48\textwidth} p{0.35\textwidth}}
+\toprule
+\textbf{Parameter} & \textbf{Value}\\
+\midrule
+Input shape & $2\times128$\\
+Convolution filters & 64, 128, 256\\
+Kernel sizes & 7, 5, 3\\
+Output classes & 11\\
+Dropout & 0.35\\
+Trainable parameters & 144,331\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Training Objective}
+Class-weighted cross-entropy is used to reduce the effect of unequal class
+frequencies:
+\begin{equation}
+\mathcal{L}=-\sum_{c=1}^{C}w_c y_c\log(\hat{y}_c).
+\end{equation}
+The model is optimized using AdamW with learning rate $3\times10^{-4}$ and
+weight decay $10^{-4}$. Cosine annealing gradually changes the learning rate
+over the training run.
+
+\section{Regularization and Generalization}
+Batch normalization stabilizes intermediate feature distributions. ReLU
+activations provide a simple nonlinear representation, while max-pooling
+reduces temporal resolution. Dropout with probability 0.35 reduces dependence
+on individual features. These choices keep the baseline compact and
+interpretable.
+
+\section{Phase 2 Transmitter}
+The Phase 2 transmitter generates a random binary frame and selects one of
+four modulation formats. The frame contains 256 symbols. The number of bits
+depends on modulation order: 256 bits for BPSK, 512 for QPSK, 768 for 8-PSK,
+and 1024 for 16-QAM.
+
+\section{Phase 2 Channel and Receiver}
+The channel applies block-Rayleigh fading, AWGN, phase offset, and frequency
+offset. The receiver applies pilot-assisted synchronization and equalization,
+then estimates the modulation format. The selected format controls adaptive
+demodulation and bit recovery.
+
+\section{Modulation Estimator}
+Let $\mathcal{C}_m$ denote a candidate constellation. The estimator searches
+over phase hypotheses and calculates the average distance from each received
+sample to its nearest candidate point. A complexity penalty is added to avoid
+always choosing the constellation with the largest number of points:
+\begin{equation}
+\hat{m}=\arg\min_m\left(d_m+\lambda\log_2|\mathcal{C}_m|\right).
+\end{equation}
+
+\section{Fixed-QPSK Comparison}
+The fixed receiver always uses the QPSK demodulator. It provides a practical
+reference for a system that does not perform adaptation. Comparing its BER
+with the adaptive receiver shows when modulation recognition provides a
+benefit and when decision uncertainty becomes the dominant failure source.
+
+\chapter{Implementation and Experimental Setup}
+
+\section{Software and Tools}
+The implementation uses Python, NumPy, scikit-learn, Matplotlib, and
+PyTorch. The repository code is organized as follows:
+\begin{itemize}
+\item \texttt{src/amc/data.py}: RadioML loading, normalization, and splits.
+\item \texttt{src/amc/model.py}: Phase 1 CNN definition.
+\item \texttt{src/amc/communications.py}: Phase 2 modulation, channel,
+      estimation, equalization, and demodulation.
+\item \texttt{scripts/train.py}: Phase 1 training and checkpointing.
+\item \texttt{scripts/evaluate.py}: Phase 1 test evaluation.
+\item \texttt{scripts/run\_phase2\_link.py}: complete Phase 2 experiment.
+\item \texttt{scripts/build\_final\_report.py}: comparison figure generation.
+\item \texttt{scripts/build\_parameter\_figures.py}: parameter and architecture
+      figures.
+\end{itemize}
+
+\section{Phase 1 Training Configuration}
+\begin{table}[H]
+\centering
+\caption{Phase 1 training configuration.}
+\label{tab:training}
+\begin{tabular}{p{0.5\textwidth} p{0.32\textwidth}}
+\toprule
+\textbf{Parameter} & \textbf{Value}\\
+\midrule
+Dataset & RadioML 2016.10a\\
+Input & 2 channels $\times$ 128 samples\\
+Split & 70\% / 15\% / 15\%\\
+Loss & Class-weighted cross-entropy\\
+Optimizer & AdamW\\
+Learning rate & $3\times10^{-4}$\\
+Weight decay & $10^{-4}$\\
+Scheduler & Cosine annealing\\
+Batch size & 1024\\
+Reported epochs & 8\\
+Random seed & 42\\
+Parameters & 144,331\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Phase 2 Link Configuration}
+\begin{table}[H]
+\centering
+\caption{Phase 2 communication-link configuration.}
+\label{tab:linkconfiguration}
+\begin{tabular}{p{0.5\textwidth} p{0.32\textwidth}}
+\toprule
+\textbf{Parameter} & \textbf{Value}\\
+\midrule
+Modulations & BPSK, QPSK, 8-PSK, 16-QAM\\
+Frame length & 256 symbols\\
+Channel & Block Rayleigh fading and AWGN\\
+Impairments & Phase and frequency offset\\
+Synchronization & Pilot-assisted simulation estimate\\
+SNR sweep & -4 to +16 dB in 2 dB steps\\
+Frames per SNR & 200\\
+Metrics & BER, SER, packet success, throughput\\
+Random seed & 42\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Execution Commands}
+The Phase 2 experiment is executed from the repository root:
+\begin{verbatim}
+python scripts/run_phase2_link.py --frames 200 \
+  --output artifacts/phase2-link-results.png
+\end{verbatim}
+The output includes a graph and
+\texttt{artifacts/phase2-link-results.json}. The consolidated comparison
+figure is generated with:
+\begin{verbatim}
+python scripts/build_final_report.py
+\end{verbatim}
+
+\section{Experiment Reproducibility}
+The final experiment uses seed 42, fixed modulation candidates, a fixed SNR
+sweep, and a fixed number of frames per SNR. Results are saved as JSON before
+figures are generated. This ensures that figures and tables are derived from
+the same numerical experiment.
+
+\section{Verification}
+The project contains automated tests for reproducible data splitting, input
+validation, modulation round trips, and clean constellation identification.
+Python compilation and whitespace checks are performed before publication.
+
+\chapter{Results and Discussion}
+
+\section{Phase 1 Training Dynamics}
+The Phase 1 checkpoint records the validation history. The model reaches its
+best validation accuracy at approximately 54.02\%. The validation curve is
+useful for observing whether the compact network is learning consistently or
+overfitting the training examples.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{artifacts/phase1-training-history.png}
+\caption{Phase 1 CNN validation accuracy history.}
+\label{fig:traininghistory}
+\end{figure}
+
+\section{Phase 1 Classification Performance}
+The Phase 1 CNN achieves 53.94\% accuracy on 33,000 held-out RadioML
+examples. Accuracy increases from 9.24\% at -20 dB SNR to 81.68\% at +12 dB
+SNR. Closely related modulation families remain difficult at low SNR because
+their waveform and constellation information is obscured by noise.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{artifacts/phase2-results.png}
+\caption{Phase 1 confusion matrix and SNR-wise classification accuracy.}
+\label{fig:phase1result}
+\end{figure}
+
+\section{Phase 2 Communication Results}
+The Phase 2 experiment evaluates 200 mixed-modulation frames at each SNR.
+At 10 dB, the receiver obtains 4.69\% BER, 6.94\% SER, 99.5\%
+modulation-decision accuracy, and 49.0\% packet success. At 12 dB, BER is
+1.85\%, SER is 3.05\%, decision accuracy is 100\%, and packet success is
+54.5\%. At 16 dB, BER is 0.095\%, SER is 0.172\%, decision accuracy is 100\%,
+packet success is 75.5\%, and throughput is 1.888 bits/symbol.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{artifacts/phase2-link-results.png}
+\caption{Phase 2 BER, SER, decision accuracy, packet success, and throughput.}
+\label{fig:phase2result}
+\end{figure}
+
+\section{Detailed Parameter Records}
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{artifacts/phase1-parameters-results.png}
+\caption{Phase 1 model, training, dataset, and result parameters.}
+\label{fig:phase1parameters}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{artifacts/phase2-parameters-results.png}
+\caption{Phase 2 communication-link parameters and measured results.}
+\label{fig:phase2parameters}
+\end{figure}
+
+\section{Phase 1 and Phase 2 Comparison}
+\begin{table}[H]
+\centering
+\caption{Technical comparison between the project phases.}
+\label{tab:comparison}
+\begin{tabular}{p{0.3\textwidth} p{0.28\textwidth} p{0.28\textwidth}}
+\toprule
+\textbf{Aspect} & \textbf{Phase 1} & \textbf{Phase 2}\\
+\midrule
+Main objective & Modulation classification & Adaptive communication receiver\\
+Input & Fixed labeled RadioML samples & Generated information frames\\
+Output & Class label & Recovered bits and link metrics\\
+Channel & Dataset-provided conditions & AWGN, Rayleigh, phase/frequency offsets\\
+Receiver action & No demodulator control & Automatic demodulator selection\\
+Main metrics & Accuracy and confusion & BER, SER, packet success, throughput\\
+Representative result & 53.94\% test accuracy & 0.095\% BER at 16 dB\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{artifacts/final-phase1-phase2-comparison.png}
+\caption{Consolidated Phase 1 and Phase 2 comparison.}
+\label{fig:comparison}
+\end{figure}
+
+\section{Error Analysis}
+At low SNR, noise causes different constellations to overlap after
+normalization. The modulation estimator can therefore select an incorrect
+format, causing the wrong demodulator to be used. This explains the high BER
+and low packet-success rate in the low-SNR region. At higher SNR, the
+constellation distances become more reliable and both decision accuracy and
+bit recovery improve.
+
+\section{Engineering Interpretation}
+The most important difference from Phase 1 is that the recognition result is
+now connected to the physical-layer data path. A classification error is not
+only counted as a wrong label; it becomes a receiver-control error that can
+cause an entire packet to fail. This provides a more communication-focused
+evaluation of AMC.
+
+\section{Limitations}
+The current implementation is a controlled simulation. Pilot-assisted
+correction is used instead of a complete timing and carrier recovery loop.
+The Phase 2 estimator is constellation-based and can later be replaced with
+the trained CNN operating online. The experiment also excludes coding,
+interleaving, pulse shaping, automatic gain control, and over-the-air SDR
+validation.
+
+\chapter{Conclusion and Future Work}
+
+This report presented a communication-domain Phase 2 extension of the Phase 1
+automatic modulation classification project. Phase 1 developed a compact CNN
+for raw I/Q modulation recognition using RadioML 2016.10a and achieved
+53.94\% held-out test accuracy. Phase 2 connected modulation recognition to a
+complete adaptive digital receiver.
+
+The Phase 2 system generates random bits, supports BPSK, QPSK, 8-PSK, and
+16-QAM, applies block-Rayleigh fading and AWGN with carrier impairments,
+performs synchronization and equalization, estimates the modulation, selects
+the demodulator, and evaluates recovered information. At 16 dB SNR, the
+adaptive receiver achieved 0.095\% BER, 0.172\% SER, 100\% decision accuracy,
+75.5\% packet success, and 1.888 bits/symbol throughput.
+
+\textbf{Contributions:}
+\begin{itemize}
+\item Retained and documented the Phase 1 RadioML CNN baseline.
+\item Implemented a transmitter--channel--receiver communication simulation.
+\item Added BPSK, QPSK, 8-PSK, and 16-QAM modulation and demodulation.
+\item Added AWGN, block-Rayleigh fading, phase offset, and frequency offset.
+\item Connected modulation estimation to adaptive demodulator selection.
+\item Evaluated BER, SER, packet success, throughput, and decision accuracy.
+\item Added reproducible scripts, JSON metrics, graphs, and report figures.
+\end{itemize}
+
+\textbf{Limitations:} The link is a software simulation with pilot-assisted
+channel correction. It does not yet include complete timing recovery, forward
+error correction, pulse shaping, or over-the-air hardware validation.
+
+\textbf{Future Work:} Future work will replace the simulated synchronization
+with an SDR receiver, connect the trained CNN directly to the online link,
+add confidence-aware fallback and retransmission, introduce coding and
+interleaving, and evaluate multipath, Doppler, oscillator phase noise, and
+hardware nonlinearity.
+
+\appendix
+\chapter{Modulation and Communication Parameters}
+
+\section{Phase 1 Parameter Summary}
+\begin{table}[H]
+\centering
+\caption{Phase 1 parameter summary.}
+\begin{tabular}{p{0.48\textwidth} p{0.36\textwidth}}
+\toprule
+\textbf{Parameter} & \textbf{Value}\\
+\midrule
+Dataset & RadioML 2016.10a\\
+Input & $2\times128$ I/Q samples\\
+Classes & 11\\
+Split & 70\% / 15\% / 15\%\\
+Trainable parameters & 144,331\\
+Optimizer & AdamW\\
+Learning rate & $3\times10^{-4}$\\
+Batch size & 1024\\
+Reported epochs & 8\\
+Test accuracy & 53.94\%\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Phase 2 Parameter Summary}
+\begin{table}[H]
+\centering
+\caption{Phase 2 parameter summary.}
+\begin{tabular}{p{0.48\textwidth} p{0.36\textwidth}}
+\toprule
+\textbf{Parameter} & \textbf{Value}\\
+\midrule
+Modulations & BPSK, QPSK, 8-PSK, 16-QAM\\
+Frame length & 256 symbols\\
+Channel & Block Rayleigh and AWGN\\
+Impairments & Phase and frequency offset\\
+SNR range & -4 to +16 dB\\
+Frames per SNR & 200\\
+At 16 dB & 0.095\% BER, 75.5\% packet success\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\chapter{Code and Reproducibility}
+
+\section{Repository Code}
+The complete implementation is maintained in the project repository:
+\begin{itemize}
+\item \texttt{src/amc/data.py}: dataset loading and preprocessing;
+\item \texttt{src/amc/model.py}: Phase 1 CNN;
+\item \texttt{src/amc/communications.py}: Phase 2 communication primitives;
+\item \texttt{scripts/train.py}: Phase 1 training;
+\item \texttt{scripts/evaluate.py}: Phase 1 evaluation;
+\item \texttt{scripts/run\_phase2\_link.py}: complete Phase 2 link simulation;
+\item \texttt{scripts/build\_final\_report.py}: comparison graph generation;
+\item \texttt{scripts/build\_parameter\_figures.py}: parameter figures.
+\end{itemize}
+
+\section{Reproduction Commands}
+\begin{verbatim}
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python scripts/run_phase2_link.py --frames 200
+python scripts/build_final_report.py
+python scripts/build_parameter_figures.py
+\end{verbatim}
+
+\section{Generated Outputs}
+The Phase 2 experiment generates
+\texttt{artifacts/phase2-link-results.png} and
+\texttt{artifacts/phase2-link-results.json}. The JSON file contains the SNR
+values, BER, SER, modulation-decision accuracy, packet success, and
+throughput used by the report figures.
 
 \StartRef
-\include{mybibfile}
-\bibliographystyle{IEEEtran}
-\bibliography{./IEEEabrv,mybibfile}
+\clearemptydoublepage
+\begin{thebibliography}{99}
 
+\bibitem{haykin2005cognitive}
+S. Haykin, ``Cognitive radio: Brain-empowered wireless communications,''
+\textit{IEEE Journal on Selected Areas in Communications}, 2005.
 
-%\include{mybibfile}
-%\bibliographystyle{IEEEtran}
-%\bibliography{IEEEabrv,mybibfile}
-% If you have more than one Appendices use
-% '\StartAppendices' instead of '\StartAppendix'
-%\StartAppendix			% 'Appendix' will be printed in Table of Contents
-%\StartAppendices		% 'Appendices' will be printed in Table of Contents
-\StartAppendix
-\Appendix{AD/A1}
+\bibitem{proakis2001digital}
+J. G. Proakis, \textit{Digital Communications}, 4th ed., McGraw-Hill, 2001.
+
+\bibitem{azzouznandi1996}
+E. E. Azzouz and A. K. Nandi,
+\textit{Automatic Modulation Recognition of Communication Signals},
+Springer, 1996.
+
+\bibitem{gardner1988}
+W. A. Gardner, ``Signal interception: A unifying theoretical framework for
+feature detection,'' \textit{IEEE Transactions on Communications}, 1988.
+
+\bibitem{oshea2016dataset}
+T. J. O'Shea and N. West, ``Radio machine learning dataset generation with
+GNU Radio,'' 2016.
+
+\bibitem{oshea2016cnn}
+T. J. O'Shea, J. Corgan, and T. C. Clancy, ``Convolutional radio modulation
+recognition networks,'' in \textit{International Conference on Engineering
+Applications of Neural Networks}, 2016.
+
+\bibitem{oshea2018ota}
+T. J. O'Shea, T. Roy, and T. C. Clancy, ``Over-the-air deep learning based
+radio signal classification,'' \textit{IEEE Journal of Selected Topics in
+Signal Processing}, 2018.
+
+\bibitem{goodfellow2016dl}
+I. Goodfellow, Y. Bengio, and A. Courville, \textit{Deep Learning},
+MIT Press, 2016.
+
+\bibitem{pytorchdocs}
+PyTorch, ``PyTorch documentation.'' [Online]. Available:
+\url{https://pytorch.org/docs/}
+
+\end{thebibliography}
+
 \end{document}
-
