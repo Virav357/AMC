@@ -138,13 +138,13 @@ def main() -> None:
         figure.savefig(args.output_dir / "phase1-training-history.png", dpi=180)
         plt.close(figure)
 
-    figure, axis = plt.subplots(figsize=(15, 7))
+    figure, axis = plt.subplots(figsize=(15, 7.5))
     axis.axis("off")
     boxes = [
-        (0.03, 0.42, "PHASE 2\nTransmitter", "#dbeafe", "Random bits\nBPSK / QPSK /\n8-PSK / 16-QAM"),
-        (0.29, 0.42, "Channel", "#fee2e2", "Rayleigh fading\nAWGN\nPhase/frequency offset"),
-        (0.55, 0.42, "Receiver front-end", "#fef3c7", "Pilot-assisted\nsynchronization\nEqualization"),
-        (0.81, 0.42, "Adaptive decision", "#dcfce7", "AMC decision\nSelect demodulator\nRecover bits"),
+        (0.03, 0.62, "PHASE 2\nTransmitter", "#dbeafe", "Random bits\nBPSK / QPSK /\n8-PSK / 16-QAM"),
+        (0.29, 0.62, "Channel", "#fee2e2", "Rayleigh fading\nAWGN\nPhase/frequency offset"),
+        (0.55, 0.62, "Receiver front-end", "#fef3c7", "Pilot-assisted\nsynchronization\nEqualization"),
+        (0.81, 0.62, "Adaptive decision", "#dcfce7", "AMC decision\nSelect demodulator\nRecover bits"),
     ]
     for x, y, title, color, body in boxes:
         axis.text(x, y, title, transform=axis.transAxes, ha="left", va="center",
@@ -153,9 +153,9 @@ def main() -> None:
         axis.text(x + 0.005, y - 0.17, body, transform=axis.transAxes,
                   ha="left", va="top", fontsize=13, color="#334155")
     for x in (0.255, 0.515, 0.775):
-        axis.annotate("", xy=(x + 0.035, 0.51), xytext=(x, 0.51),
+        axis.annotate("", xy=(x + 0.035, 0.71), xytext=(x, 0.71),
                       xycoords="axes fraction", arrowprops={"arrowstyle": "->", "lw": 2.5, "color": "#64748b"})
-    axis.text(0.5, 0.12, "Measured outputs: BER • SER • packet success • throughput • modulation decision accuracy",
+    axis.text(0.5, 0.08, "Measured outputs: BER • SER • packet success • throughput • modulation decision accuracy",
               transform=axis.transAxes, ha="center", fontsize=17, weight="bold", color="#1e3a8a")
     axis.set_title("Adaptive Communication Receiver Mechanism", fontsize=21, weight="bold", pad=24)
     figure.savefig(args.output_dir / "phase2-system-architecture.png", dpi=180, bbox_inches="tight")
