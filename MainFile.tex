@@ -185,7 +185,7 @@ The objectives of the project are:
 \item Select a compatible demodulator automatically.
 \item Measure BER, SER, packet success, throughput, and decision accuracy.
 \item Compare adaptive processing with a fixed-QPSK receiver.
-\item Prepare a professional, reproducible Phase-II report and package.
+\item Document the Phase-II implementation and experimental results clearly.
 \end{enumerate}
 
 \section{Contributions}
@@ -202,8 +202,8 @@ block-fading model, AWGN, carrier phase and frequency offsets, and
 pilot-assisted correction. Pulse shaping, matched filtering, timing-loop
 implementation, forward-error correction, interleaving, retransmission, and
 over-the-air SDR measurements are outside the present scope. These
-limitations are stated explicitly so that simulation results are not
-presented as hardware measurements.
+limitations are stated so that the simulation results are not confused with
+hardware measurements.
 
 \section{Organization of the Report}
 Chapter 2 reviews classical AMC, deep-learning approaches, communication
@@ -596,11 +596,10 @@ across decision boundaries. A single bit error is sufficient to mark a
 complete packet unsuccessful.
 
 \section{Design Rationale}
-The Phase-II estimator is deliberately interpretable rather than opaque. A
-panel member can inspect the candidate constellations, distance scores,
-selected modulation, recovered symbols, and final bit metrics. This design
-also provides a stable communication baseline for future replacement by a
-trained CNN or a confidence-aware learned estimator.
+The Phase-II estimator is deliberately interpretable. The candidate
+constellations, distance scores, selected modulation, recovered symbols, and
+final bit metrics can all be inspected. This design also provides a baseline
+for future replacement by a trained CNN or a confidence-aware estimator.
 
 \chapter{Implementation and Experimental Setup}
 
@@ -662,16 +661,14 @@ created.
 \section{Verification}
 Automated tests cover clean modulation round trips, validation of invalid
 inputs, deterministic data handling, and clean constellation identification.
-The final package is checked for balanced LaTeX environments, existing
-figure references, required style dependencies, and a valid ZIP archive.
-These checks supplement the numerical experiment and reduce documentation
-errors.
+The report source is checked for balanced LaTeX environments, existing
+figure references, and the required style dependencies. These checks
+supplement the numerical experiment.
 
 \section{Reproducibility Record}
-The JSON result record is the authoritative numerical source for the report.
-It stores the seed, frame count, SNR list, modulation list, adaptive metrics,
-and fixed-QPSK metrics. The PNG figures are generated from this record, so
-rounded values shown in tables do not alter the underlying experiment.
+The JSON result record stores the seed, frame count, SNR list, modulation
+list, adaptive metrics, and fixed-QPSK metrics. The figures are generated
+from the same values used in the tables.
 
 \chapter{Results and Discussion}
 
@@ -792,7 +789,7 @@ also demonstrates why end-to-end communication evaluation is necessary.
       demodulation.
 \item Added a fixed-QPSK reference for system-level comparison.
 \item Evaluated BER, SER, decision accuracy, packet success, and throughput.
-\item Created a reproducible result record, figures, tests, and report package.
+\item Created the result record, figures, tests, and supporting project files.
 \end{itemize}
 
 \section{Limitations}
@@ -875,17 +872,11 @@ figures. The archive also contains the report source, style dependency,
 architecture figure, result figure, communication module, experiment driver,
 and tests.
 
-\section{Evaluation Checklist}
-\begin{itemize}
-\item Title and certificate pages identify the work as Phase-II.
-\item Academic year is 2026--27 and student roll numbers are increasing.
-\item Preliminary pages follow the supplied Phase-I report sequence.
-\item Chapters use the same eight chapter names and professional structure.
-\item Core chapters contain expanded theory, methodology, setup, and results.
-\item Appendix A contains technical modulation and metric descriptions.
-\item Appendix B contains workflow and reproducibility information.
-\item References are presented as a final bibliography section.
-\end{itemize}
+\section{Closing Note}
+The report follows the same preliminary pages, chapter sequence, appendix
+format, and reference-page arrangement as the earlier project report. The
+content in Chapters 1--8 describes the Phase-II communication receiver, its
+implementation, and its measured results.
 
 \renewcommand{\bibname}{References}
 \StartRef
@@ -940,6 +931,15 @@ applied to document recognition,'' \textit{Proceedings of the IEEE}, 1998.
 \bibitem{goodfellow2016dl}
 I. Goodfellow, Y. Bengio, and A. Courville, \textit{Deep Learning},
 MIT Press, 2016.
+
+\bibitem{loshchilov2019}
+I. Loshchilov and F. Hutter, ``Decoupled weight decay regularization,'' in
+\textit{International Conference on Learning Representations}, 2019.
+
+\bibitem{powers2011}
+D. M. W. Powers, ``Evaluation: From precision, recall and F-measure to ROC,
+informedness, markedness and correlation,'' \textit{Journal of Machine
+Learning Technologies}, vol. 2, no. 1, pp. 37--63, 2011.
 
 \bibitem{pytorchdocs}
 PyTorch, ``PyTorch documentation.'' [Online]. Available:
