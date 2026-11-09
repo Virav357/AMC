@@ -14,12 +14,14 @@
 \usepackage{longtable}
 \usepackage{hyperref}
 \usepackage{cite}
+\usepackage{enumitem}
 \hypersetup{colorlinks=true,linkcolor=black,citecolor=black,urlcolor=blue}
 \usepackage{fancyhdr}
 
 \setlength{\tabcolsep}{5pt}
 \renewcommand{\arraystretch}{1.25}
 \setcounter{tocdepth}{2}
+\setlist{topsep=4pt,itemsep=3pt,parsep=0pt,partopsep=0pt}
 
 \begin{document}
 
@@ -125,6 +127,11 @@ SNR & Signal-to-Noise Ratio \\
 
 \StartBody
 \pagestyle{fancy}
+\fancyhf{}
+\cfoot{\thepage}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\chaptermark}[1]{}
+\renewcommand{\sectionmark}[1]{}
 
 \chapter{Introduction}
 
@@ -168,6 +175,38 @@ classification benchmark. The receiver must operate across channel
 conditions, report confidence or uncertainty, and provide a measurable
 benefit to the recovered information. Phase II is designed around this
 system-level requirement.
+
+\section{Receiver Requirements}
+The receiver developed in this phase is required to perform more than a
+single classification operation. It must accept a stream of complex samples,
+estimate the modulation format, select a compatible demodulator, and report
+the quality of the recovered information. This requirement changes the way
+the experiment is designed. The transmitted bits must remain available as a
+reference, channel effects must be represented explicitly, and the output
+must include communication metrics rather than only a class label.
+
+The receiver should also behave consistently when the signal quality changes.
+At high SNR, it should identify the modulation and recover most of the
+information bits. At low SNR, it should expose its uncertainty instead of
+producing a misleadingly confident output. For this reason, decision
+accuracy, BER, SER, packet success, and throughput are recorded separately.
+Together they show whether a recognition decision is useful to the physical
+layer.
+
+\section{Phase-I Baseline and Phase-II Extension}
+The earlier phase established a CNN-based AMC baseline using normalized I/Q
+windows from the RadioML dataset. That work answered the question of
+whether a compact model could distinguish several waveform classes. The
+baseline is retained in this report because it provides the starting point
+for the project and gives a reference for the learning components.
+
+Phase II changes the endpoint of the system. The new transmitter produces
+known information frames, the channel introduces controlled impairments, and
+the receiver uses its modulation estimate to select a demodulator. The main
+new result is therefore not another isolated accuracy value. It is the
+measured behaviour of an adaptive link from transmitted bits to recovered
+bits. The two phases are related, but they answer different engineering
+questions and are reported separately.
 
 \section{Problem Definition and Objectives}
 \textbf{Problem Statement:} Design and evaluate an adaptive digital
@@ -215,6 +254,18 @@ experimental record. Chapter 5 explains the proposed receiver methodology
 and design. Chapter 6 describes implementation and experimental setup.
 Chapter 7 presents measured results and discussion. Chapter 8 concludes the
 work and identifies future extensions.
+
+\section{Chapter Summary}
+Chapter 1 establishes the motivation, project objectives, and distinction
+between the two project phases. Chapter 2 places the work in the context of
+classical AMC, learning-based recognition, and adaptive receiver design.
+Chapter 3 develops the signal, channel, synchronization, and metric
+equations. Chapter 4 describes how the communication frames are generated
+and prepared. Chapter 5 gives the proposed receiver in block form.
+Chapter 6 records the software and experiment settings. Chapter 7 presents
+the numerical results, including the complete SNR sweep and the retained
+Phase-I comparison. Chapter 8 discusses the contribution, limitations, and
+next implementation steps.
 
 \chapter{Literature Review}
 
@@ -296,7 +347,7 @@ and PyTorch provide the numerical and visualization environment used by the
 project \cite{pytorchdocs}.
 
 \section{Summary of Representative Studies}
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \small
 \caption{Representative studies and their relation to the Phase-II work.}
@@ -326,6 +377,41 @@ between these two stages is whether the recognition result can configure a
 useful receiver and deliver reliable information. Phase II addresses this gap
 by evaluating the complete path from generated bits to recovered bits.
 
+\section{Comparison of Evaluation Practices}
+Three evaluation practices can be distinguished in the reported literature.
+The first reports only a classifier accuracy, which is useful for comparing
+recognition models but does not show how the decision affects a receiver. The
+second assumes perfect modulation knowledge and evaluates BER, which gives a
+clear link result but removes the recognition problem. The third combines
+recognition with demodulation and evaluates the recovered information. The
+present project follows the third practice.
+
+This distinction is important when comparing numerical values. A classifier
+accuracy near one does not imply a BER near zero because symbol decisions
+still depend on residual noise, gain error, phase error, and the separation
+between constellation points. Similarly, a low BER averaged over all
+symbols may still produce a low packet-success rate when a long frame is
+declared unsuccessful after one error. The report therefore avoids using one
+metric as a substitute for the complete receiver result.
+
+\section{Design Choices from the Review}
+The review led to four design choices. First, the modulation set contains
+both phase-only formats and a rectangular amplitude-and-phase format. This
+allows the receiver to be tested on different decision geometries. Second,
+the channel contains both additive noise and multiplicative fading so that
+the estimator is not tested only on an ideal amplitude scale. Third, a
+fixed-QPSK path is included as a simple reference rather than as a competing
+learning model. Finally, the estimator is based on constellation distance,
+which makes each decision traceable and leaves a clear path for replacing it
+with a trained model in future work.
+
+\section{Summary}
+The literature supports the need for automatic modulation recognition, but
+it also shows that a classification result is only one part of a receiver.
+The Phase-II work retains the useful recognition perspective from Phase I and
+adds a controlled communication link around it. This arrangement makes the
+effect of modulation estimation visible in the final bit and packet metrics.
+
 \chapter{Theoretical Background}
 
 \section{Baseband Signal Model}
@@ -352,7 +438,7 @@ symbol by reducing angular separation. 16-QAM uses both amplitude and phase
 and carries four bits per symbol, but requires more accurate gain, phase,
 and noise control.
 
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \small
 \caption{Digital modulation formats used by the Phase-II receiver.}
@@ -431,6 +517,56 @@ the effective throughput is the average of $b_m$ multiplied by the
 packet-success indicator. Therefore, packet success is stricter than BER
 and exposes the practical effect of even a small number of bit errors.
 
+\section{Bit Mapping and Symbol Decisions}
+For a modulation order $M$, the input stream is divided into groups of
+$\log_2 M$ bits. Each group is assigned to one point in the normalized
+constellation. The same mapping is used in reverse at the receiver after a
+nearest-point decision. Using one mapping definition in both directions
+avoids an artificial error caused by a mismatch between the transmitter and
+demodulator.
+
+The minimum distance between constellation points is a useful qualitative
+indicator of robustness. BPSK has the largest separation for its rate, while
+8-PSK packs more points around the same phase circle. 16-QAM provides four
+bits per symbol, but its inner points can be confused with adjacent points
+after noise and amplitude distortion. These differences explain why one
+common SNR does not produce the same BER for all formats.
+
+\section{Frame-Level Reliability}
+If the probability of a bit error is $p_b$ and a frame contains $L$ bits,
+the idealized probability of a completely correct frame is approximately
+\begin{equation}
+P_{\mathrm{packet}}\approx(1-p_b)^L.
+\end{equation}
+The approximation assumes independent bit errors and is not used as a
+replacement for the measured packet count. It explains, however, why a BER
+of a few percent can coexist with a packet-success rate near zero for a
+long frame. In the experiment, the frame length changes with modulation
+order because the symbol count is fixed, so the measured packet metric also
+reflects the information load of each format.
+
+\section{Throughput Definition}
+The nominal information rate of a modulation is its bits-per-symbol value.
+The effective value reported in this project multiplies that value by the
+packet-success indicator before averaging over frames:
+\begin{equation}
+T_{\mathrm{eff}}=\frac{1}{F}\sum_{i=1}^{F}
+b_i\,\mathbb{1}\{\text{frame }i\text{ is correct}\}.
+\end{equation}
+This definition does not include coding overhead, pilot overhead, filtering
+loss, or hardware latency. It is intended to compare the useful information
+delivered by the adaptive and fixed receivers under the same simulation
+conditions.
+
+\section{Interpretation of Decision Accuracy}
+Decision accuracy measures whether the estimated modulation label matches
+the transmitted label. It does not measure whether all symbols are correct.
+For example, at 10 dB the measured decision accuracy is 99.5 percent, while
+the BER is 4.69 percent. This difference is expected because the estimator
+can identify the family correctly while individual noisy samples cross
+decision boundaries. The separation of these two measurements is one of the
+main reasons for using a complete link experiment.
+
 \chapter{Dataset and Preprocessing}
 
 \section{Phase-II Data Generation}
@@ -448,7 +584,7 @@ packet-level comparisons consistent while allowing the information rate to
 change with modulation order.
 
 \section{Modulation Classes}
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \small
 \caption{Modulation classes used to generate Phase-II communication frames.}
@@ -512,6 +648,39 @@ generated frames are appropriate for algorithm verification and comparative
 analysis, but a future SDR experiment is required before making claims about
 over-the-air performance.
 
+\section{Data Record Structure}
+Every frame has a corresponding record containing the selected modulation,
+SNR, channel realization, transmitted bits, received samples, estimated
+modulation, recovered bits, and error counts. The experiment driver reduces
+these frame records into arrays indexed by SNR. Keeping the frame-level
+information during the experiment is useful for diagnosing unusual results,
+such as a high decision accuracy together with a low packet-success rate.
+
+The final JSON file stores the aggregate values used in the report. It also
+stores the modulation names and the experiment seed, so the order of the
+curves is not dependent on the order in which a plotting script happens to
+read a dictionary. The PNG figures are presentation views of this record;
+they are not manually redrawn result diagrams.
+
+\section{Normalization Checks}
+Before the channel is applied, the average power of each normalized
+constellation is checked. This check is important because the SNR sweep is
+meaningful only when the formats are compared at a common reference power.
+After equalization, the received samples are normalized using the same
+convention before distance scores are calculated. A gain mismatch would
+otherwise make the estimator prefer a format for amplitude reasons rather
+than for its geometric structure.
+
+\section{Quality-Control Cases}
+Three simple cases are used before the full sweep. In the first case, a
+clean frame is modulated and demodulated without a channel; all recovered
+bits must match. In the second case, an invalid modulation name or an
+incompatible bit length must produce an explicit validation error. In the
+third case, a clean constellation is supplied to the estimator; the
+expected class must be selected. These cases do not replace the noisy
+experiment, but they separate implementation errors from channel-induced
+errors.
+
 \chapter{Proposed Methodology and Model Design}
 
 \section{End-to-End Pipeline}
@@ -532,7 +701,7 @@ The final bit sequence is compared with the transmitter reference. This
 pipeline is intentionally different from a classifier-only workflow because
 the modulation decision controls a subsequent physical-layer operation.
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
 \includegraphics[width=0.86\linewidth]{artifacts/phase2-system-architecture.png}
 \caption{End-to-end Phase-II adaptive communication receiver.}
@@ -601,6 +770,57 @@ constellations, distance scores, selected modulation, recovered symbols, and
 final bit metrics can all be inspected. This design also provides a baseline
 for future replacement by a trained CNN or a confidence-aware estimator.
 
+\section{Detailed Receiver Sequence}
+The receiver processes one frame in a fixed order. It first removes the
+known simulated carrier rotation and compensates the block channel. It then
+computes candidate distances for all four constellations. The minimum
+penalized distance determines the modulation estimate. Only after this
+decision is made does the receiver select the corresponding bit mapper.
+Finally, the recovered bit sequence is compared with the transmitter
+reference and the frame-level counters are updated.
+
+This sequence prevents the experiment from accidentally using the true
+transmitted modulation during demodulation. The true label is used only for
+measuring decision accuracy and for calculating the reference errors. The
+demodulator receives the estimate produced by the receiver, which makes the
+adaptive path a genuine decision-dependent pipeline.
+
+\section{Estimator Penalty and Bias}
+The number of points in a constellation affects the average nearest-point
+distance. A high-order format has more candidate points and can sometimes
+obtain a lower unpenalized distance even when the received samples are
+better explained by a lower-order format. The penalty term in the estimator
+reduces this bias by adding a cost proportional to the logarithm of the
+constellation order.
+
+The penalty is not intended to be a universal statistical criterion. It is a
+simple engineering correction that keeps the estimator interpretable. Its
+value is held constant over the SNR sweep so that the improvement at high
+SNR is not produced by changing a tuning parameter at each point. A future
+version can select this parameter using a separate validation experiment or
+replace the distance rule with a learned confidence model.
+
+\section{Error Propagation Paths}
+There are two main paths from a noisy sample to an incorrect frame. In the
+first path, the constellation estimator selects the wrong format. The
+demodulator then uses an incompatible geometry and a large number of bits
+can be wrong even when individual samples are not extremely noisy. In the
+second path, the format estimate is correct but one or more samples cross a
+decision boundary. This produces symbol and bit errors without reducing
+decision accuracy.
+
+\section{Complexity Considerations}
+For a frame containing $N$ received symbols and candidate constellations
+$\mathcal{C}_m$, the distance calculation requires approximately
+\[
+\mathcal{O}\left(N\sum_m|\mathcal{C}_m|\right)
+\]
+complex comparisons. With the four formats used here, the largest term is
+the 16-QAM candidate set. The implementation is therefore suitable for
+offline experiments and small real-time demonstrations. A deployed receiver
+could reduce the cost using a hierarchical classifier, moment-based
+pre-screening, or a neural model followed by a small verification step.
+
 \chapter{Implementation and Experimental Setup}
 
 \section{Software and Tools}
@@ -619,7 +839,7 @@ constant across the sweep, allowing changes in the curves to be interpreted
 primarily as SNR effects.
 
 \section{Hyperparameters and Link Parameters}
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \small
 \caption{Phase-II link parameters used for the final experiment.}
@@ -670,6 +890,60 @@ The JSON result record stores the seed, frame count, SNR list, modulation
 list, adaptive metrics, and fixed-QPSK metrics. The figures are generated
 from the same values used in the tables.
 
+\section{Implementation Modules}
+The implementation is divided into modulation, channel, receiver, metric,
+and experiment-driver responsibilities. The modulation functions define the
+constellations and bit mappings. The channel functions apply fading, carrier
+offset, and noise. The receiver functions perform correction, estimate the
+format, and demodulate. The experiment driver repeats these operations over
+the SNR list and writes the aggregate record.
+
+This separation is useful during debugging because each stage can be tested
+without running the complete sweep. It also makes the Phase-II design
+different from a single notebook-style experiment. The report presents the
+algorithmic behaviour without reproducing source-code listings, while the
+repository retains the implementation files used to produce the numerical
+results.
+
+\section{Numerical Conventions}
+Complex samples use NumPy complex arrays and the real and imaginary parts
+represent the in-phase and quadrature components. Random numbers are
+generated from a fixed seed at the experiment level. SNR values are stored
+in decibels, while noise scales are calculated in linear power units before
+being applied to the complex samples. Percentages in the report are rounded
+for readability; the JSON record retains the underlying decimal values.
+
+\section{Parameter Selection}
+The frame length of 256 symbols gives enough samples for a constellation
+estimate while keeping one experiment run manageable. Two hundred frames
+per SNR provide a meaningful packet-success count without making the
+experiment dependent on a single channel realization. The SNR interval from
+$-4$ to $16$ dB covers the transition from an unusable low-SNR link to a
+high-SNR link where modulation decisions are stable.
+
+\section{Setup Limitations}
+Repeating the experiment with the same seed reproduces the stored numerical
+record. Repeating it with a different seed is expected to change individual
+frames and slightly change the aggregate values, especially packet success,
+because packet success is a binary frame-level metric. The experiment is
+therefore deterministic for comparison, but the result should not be read as
+an exact performance guarantee for every random channel realization.
+
+\section{Runtime and Resource Considerations}
+The communication experiment is dominated by the repeated distance
+calculation for the candidate constellations. Its memory requirement is
+small because one frame is processed before the aggregate arrays are
+updated. This makes the experiment suitable for an ordinary project
+computer and avoids making the reported result dependent on a specialised
+GPU. The retained CNN baseline and the Phase-II communication link are
+therefore kept as separate experiments with separate resource requirements.
+
+The same implementation can be extended in two directions. More frames can
+be evaluated to improve statistical resolution, or more candidate formats
+and channel models can be added to test generality. In both cases the
+result record should be extended before the report tables are updated so
+that every new curve remains traceable to an experiment setting.
+
 \chapter{Results and Discussion}
 
 \section{Training Dynamics}
@@ -680,6 +954,35 @@ recognition baseline motivates the AMC function, while the new evidence is
 the measured relationship between modulation selection, bit recovery, packet
 success, and throughput.
 
+\section{Retained Phase-I Learning Results}
+The Phase-I CNN baseline was trained on normalized I/Q windows from the
+RadioML 2016.10a dataset. It achieved 53.94 percent accuracy on the held-out
+test split, with the expected increase in accuracy as the SNR improved. The
+baseline remains relevant because it demonstrates the recognition component
+that motivated the adaptive receiver, but it is not used to claim the
+communication-link results reported below.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.88\linewidth]{artifacts/phase1-training-history.png}
+\caption{Training and validation history retained from the Phase-I CNN baseline.}
+\label{fig:phase1training}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.82\linewidth]{artifacts/confusion-matrix.png}
+\caption{Confusion matrix from the retained Phase-I modulation-classification baseline.}
+\label{fig:phase1confusion}
+\end{figure}
+
+The confusion matrix shows that the baseline is affected by the similarity
+between waveform classes at low SNR. This observation supports the Phase-II
+decision to include channel quality and recovered-bit measurements. A model
+can confuse two classes while still producing a useful result in one
+operating region, or it can make a small number of classification errors
+that cause a large packet-level loss after demodulation.
+
 \section{Overall Communication Performance}
 The adaptive receiver has two operating regions. From $-4$ to approximately
 8 dB, noise and fading make the four constellations difficult to distinguish.
@@ -687,15 +990,29 @@ From 10 dB onward, the modulation decision becomes reliable and the BER and
 SER decrease sharply. This transition is the most important Phase-II result
 because it exposes the operating limit of the complete communication chain.
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
 \includegraphics[width=0.91\linewidth]{artifacts/phase2-link-results.png}
 \caption{BER, SER, decision accuracy, packet success, and throughput of the adaptive receiver.}
 \label{fig:results}
 \end{figure}
 
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.88\linewidth]{artifacts/phase2-results.png}
+\caption{Additional modulation-recognition result retained with the project results.}
+\label{fig:phase2recognition}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.84\linewidth]{artifacts/final-phase1-phase2-comparison.png}
+\caption{Comparison of the earlier recognition baseline and the Phase-II receiver study.}
+\label{fig:phasecomparison}
+\end{figure}
+
 \section{SNR-Wise Performance}
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \small
 \caption{Selected SNR-wise results from the final Phase-II experiment.}
@@ -726,6 +1043,61 @@ fails when any bit in its 256-symbol frame is incorrect. Effective
 throughput reaches 1.888 bits/symbol because successful frames contribute
 according to their modulation order.
 
+\section{Complete SNR Sweep}
+Table~\ref{tab:fullsnrresults} lists every SNR value in the final sweep.
+The low-SNR rows show that a receiver can produce a modulation decision for
+some frames even when no complete packet is recovered. From 8 dB onward the
+curves begin to separate from the fixed-QPSK reference, and the strongest
+improvement occurs between 8 and 10 dB. The table also makes clear that the
+reported 16 dB point is the final measured point of the sweep rather than an
+isolated best-case trial.
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{Complete SNR-wise results for the adaptive Phase-II receiver.}
+\label{tab:fullsnrresults}
+\begin{tabular}{c c c c c c}
+\toprule
+\textbf{SNR} & \textbf{BER} & \textbf{SER} & \textbf{Decision} &
+\textbf{Packet} & \textbf{Throughput}\\
+\midrule
+$-4$ dB & 71.03\% & 96.10\% & 22.5\% & 0.0\% & 0.000\\
+$-2$ dB & 72.00\% & 95.67\% & 20.5\% & 0.0\% & 0.000\\
+0 dB & 65.74\% & 92.81\% & 27.5\% & 0.0\% & 0.000\\
+2 dB & 68.07\% & 92.68\% & 22.5\% & 0.0\% & 0.000\\
+4 dB & 62.75\% & 88.79\% & 27.0\% & 0.0\% & 0.000\\
+6 dB & 61.52\% & 86.35\% & 26.0\% & 0.0\% & 0.000\\
+8 dB & 51.07\% & 62.23\% & 47.0\% & 18.0\% & 0.450\\
+10 dB & 4.69\% & 6.82\% & 99.5\% & 49.0\% & 1.225\\
+12 dB & 1.85\% & 3.05\% & 100.0\% & 54.5\% & 1.363\\
+14 dB & 0.56\% & 1.00\% & 100.0\% & 57.0\% & 1.425\\
+16 dB & 0.095\% & 0.172\% & 100.0\% & 75.5\% & 1.888\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Parameter and Result Records}
+The project archive also contains separate parameter and result summaries.
+They are included here to make the distinction between experiment settings
+and measured outputs explicit. The parameter records describe the frame,
+channel, modulation, and evaluation choices. The result records contain the
+curves and aggregate metrics produced after the experiment.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.90\linewidth]{artifacts/phase2-parameters-results.png}
+\caption{Phase-II parameter and result summary generated from the experiment record.}
+\label{fig:phase2parameters}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.90\linewidth]{artifacts/phase1-parameters-results.png}
+\caption{Phase-I parameter and result summary retained for comparison.}
+\label{fig:phase1parameters}
+\end{figure}
+
 \section{Low-SNR Performance}
 At $-4$ dB, adaptive BER is approximately 0.710 and modulation-decision
 accuracy is 22.5\%. Through 8 dB, the estimator remains uncertain and packet
@@ -740,6 +1112,30 @@ frames. The adaptive receiver improves rapidly after the modulation
 decision transition and reaches 0.000948 BER at 16 dB. This comparison
 shows that the Phase-II contribution is receiver adaptation, not merely a
 change in how a label is reported.
+
+\section{Interpretation by Modulation Order}
+BPSK contributes one information bit per symbol and has the largest
+decision margin among the four formats. QPSK increases the information rate
+while retaining phase-only detection. 8-PSK and 16-QAM carry more
+information per symbol but are more sensitive to residual phase, amplitude,
+and noise errors. Since the experiment selects formats across the frame
+set, the aggregate throughput rises when packet success improves at high
+SNR.
+
+The fixed-QPSK comparison is intentionally conservative. It is not expected
+to be optimal for BPSK, 8-PSK, or 16-QAM because it applies the same mapping
+to every frame. Its relatively flat BER curve therefore indicates the cost
+of a receiver that does not adapt, while the adaptive curve shows the
+benefit obtained after the modulation decision becomes reliable.
+
+\section{Result Traceability}
+The result figure, complete SNR table, and summary values in the abstract
+are derived from the same JSON record. The result manifest also records the
+seed, number of frames, modulation set, and best measured operating point.
+This traceability is important when rounded percentages are copied into
+tables or presentation slides. The underlying values remain available for
+rechecking without changing the report text.
+
 
 \section{Error Analysis and Observations}
 Three error sources dominate the results. First, noise causes constellation
@@ -764,6 +1160,29 @@ pulse shaping, timing recovery, frequency-selective multipath, Doppler,
 oscillator phase noise, nonlinear amplification, or over-the-air hardware.
 The numerical results should therefore be interpreted as a reproducible
 Phase-II software baseline.
+
+\section{Statistical Reliability of the Sweep}
+Each SNR point contains 200 frames, so the packet-success percentage changes
+in increments of 0.5 percentage points. This resolution is sufficient to
+show the transition from no successful packets to a stable high-SNR region,
+but it should not be interpreted as a confidence interval. A larger run
+would reduce the variation of the estimate, especially in the low-error
+region where only a few frames fail.
+
+The BER and SER values are calculated from all bits and symbols in the
+frames at one SNR, while decision accuracy and packet success are calculated
+from frame counts. These metrics therefore have different statistical
+granularities. Reporting them together avoids treating a frame-level
+percentage as if it had the same uncertainty as a bit-level percentage.
+
+\section{Engineering Meaning of the Transition Region}
+The interval from 8 to 10 dB is the most informative part of the measured
+curve. At 8 dB, decision accuracy is only 47 percent and packet success is
+18 percent. At 10 dB, decision accuracy rises to 99.5 percent and packet
+success rises to 49 percent. This sharp change indicates that the
+constellation estimator is operating near a separability boundary. A
+practical receiver could use this region to trigger a conservative fallback,
+request retransmission, or reduce the modulation order.
 
 \chapter{Conclusion and Future Work}
 
@@ -808,12 +1227,48 @@ channels, Doppler, oscillator phase noise, and nonlinear RF effects should
 then be evaluated. Finally, the complete system should be tested on an SDR
 using recorded and over-the-air signals.
 
+\section{Lessons from the Phase-II Evaluation}
+The first lesson is that recognition and communication performance should
+not be treated as identical. The second is that packet success is a useful
+strict measure for a project that intends to describe a receiver rather than
+only a classifier. The third is that a controlled simulation can expose the
+interaction between modulation order, channel quality, and receiver
+adaptation before hardware resources are introduced.
+
+The evaluation also identified the importance of keeping the experiment
+record separate from the report narrative. The report uses rounded values
+for readability, while the result file preserves the full arrays. This
+separation makes it possible to revise a figure or table without changing
+the receiver implementation.
+
+\section{Expected Hardware Demonstration}
+A hardware demonstration can use an SDR transmitter and receiver with a
+known pilot sequence and a controlled modulation schedule. The first
+demonstration should use a cable or attenuated connection to avoid
+uncontrolled interference. The receiver can then compare the estimated
+modulation with the configured transmitter mode and calculate BER using a
+known payload. After the cable test, an over-the-air test can introduce
+antenna and multipath effects.
+
+The simulation modules already provide the logical stages required for this
+extension. The channel function would be replaced by sample acquisition,
+the pilot-assisted correction would become a measured synchronization loop,
+and the same modulation estimator and metric functions could be retained.
+This staged transition reduces the risk of changing the algorithm and the
+measurement method at the same time.
+
+\section{Final Statement}
+Phase II therefore provides a complete software receiver study rather than
+only a new classification plot. It establishes the transmitter, channel,
+adaptive decision, demodulation, and measurement path needed for the next
+hardware-oriented stage of the project.
+
 \clearemptydoublepage
 \appendix
 \chapter{Modulation Class Descriptions}
 
 \section{Summary of Modulation Characteristics}
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \small
 \caption{Modulation classes used by the Phase-II communication link.}
@@ -843,6 +1298,69 @@ Throughput & Successful information bits per transmitted symbol.\\
 \bottomrule
 \end{tabular}
 
+\section{Constellation and Decision Notes}
+For BPSK, the two normalized points are placed on the real axis with
+opposite signs. QPSK uses four equally spaced phase points. 8-PSK uses
+eight equally spaced phase points, reducing the angular separation between
+neighbours. 16-QAM uses a square grid with four amplitude levels on each
+axis. The receiver uses nearest-point decisions after correction and
+converts the selected point index back to the corresponding bit group.
+
+The distance estimator compares a received frame with every candidate
+constellation. It does not require the transmitted label during its
+decision. The label is used later only to calculate modulation-decision
+accuracy and to associate the recovered frame with the correct reference
+bits.
+
+\section{Metric Examples}
+Suppose a frame contains 256 symbols and uses QPSK. The frame then carries
+512 information bits. If two bits are wrong, its BER is $2/512$, but its
+packet-success indicator is zero because the frame is not completely
+correct. If the frame is correct, it contributes two bits per symbol to
+the effective-throughput average. These definitions explain why the
+throughput curve can remain below the nominal modulation rate even when
+the decision accuracy is high.
+
+\section{Receiver Parameter Table}
+\begin{table}[htbp]
+\centering
+\small
+\caption{Detailed receiver and experiment parameters.}
+\label{tab:appendixparameters}
+\begin{tabular}{p{0.42\textwidth} p{0.38\textwidth}}
+\toprule
+\textbf{Parameter} & \textbf{Selected value}\\
+\midrule
+Number of information frames per SNR & 200\\
+Symbols in each frame & 256\\
+SNR values & $-4,-2,\ldots,16$ dB\\
+Candidate formats & BPSK, QPSK, 8-PSK, 16-QAM\\
+Channel coefficient & One complex coefficient per frame\\
+Noise model & Complex additive white Gaussian noise\\
+Carrier phase & Random frame-level phase offset\\
+Carrier frequency & Random normalized frequency offset\\
+Receiver correction & Pilot-assisted simulated estimate\\
+Estimator score & Mean nearest-point distance plus order penalty\\
+Frame success condition & All recovered bits are correct\\
+Random seed & 42\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Format-Specific Observations}
+BPSK is expected to provide the most robust decision geometry because the
+two points are separated by a large distance. Its limitation is the lowest
+nominal information rate. QPSK offers twice the rate with four phase
+states, but the angular separation is smaller. 8-PSK further increases the
+rate and places more points around the same circle. 16-QAM changes both
+amplitude and phase, so gain correction becomes especially important.
+
+These observations do not imply that one format is always preferable. A
+communication system selects a format according to channel quality,
+required data rate, power, and implementation complexity. The purpose of
+including all four formats is to make the adaptive receiver face the same
+trade-off that occurs in a practical link.
+
 \chapter{Project Workflow Summary}
 
 \section{Phase-II Workflow}
@@ -871,6 +1389,159 @@ point. The JSON result record contains the complete arrays used in the
 figures. The archive also contains the report source, style dependency,
 architecture figure, result figure, communication module, experiment driver,
 and tests.
+
+\section{Experiment Review Sequence}
+Before accepting a new result, the following review sequence is applied.
+The source is compiled twice so that the table of contents and lists are
+updated. The generated PDF is checked for page count, chapter order, figure
+labels, table labels, and the final reference heading. The result JSON is
+compared with the values quoted in the abstract and results chapter. The
+archive is then tested independently so that missing style files or figures
+are detected before the report is shared.
+
+\section{Files Used in the Report}
+The main report source is \texttt{MainFile.tex}. The SVNIT layout is
+provided by \texttt{svniteced\_project.sty}, and \texttt{null.tex} supplies
+the template dependency used for page numbering. The architecture and
+result figures are stored in the artifacts directory. The communication
+implementation is stored in the source directory, while the experiment
+driver and tests are stored separately. This organization keeps the report
+source readable and ensures that the displayed figures can be traced to
+the project files.
+
+\section{Step-by-Step Review Checklist}
+\begin{enumerate}
+\item Confirm that the input bits are binary and that their length is a
+      multiple of the selected modulation's bits-per-symbol value.
+\item Verify that the normalized constellation has the intended number of
+      points and average power.
+\item Apply the channel to a copy of the transmitted symbols, keeping the
+      original symbols unchanged as the reference.
+\item Correct the received sequence without passing the true modulation
+      label to the estimator.
+\item Store the selected modulation and distance scores before demodulation.
+\item Compare the recovered bits with the corresponding transmitted bits.
+\item Update BER, SER, packet-success, and throughput counters from the same
+      frame result.
+\item Aggregate the frame results by SNR and write the JSON record.
+\item Generate figures from the record and compare the quoted values with
+      the stored arrays.
+\end{enumerate}
+
+\section{Failure Modes Considered}
+An empty or incorrectly shaped bit array can cause the mapper to create an
+incomplete final symbol. An unnormalized constellation can bias the
+distance estimator. A channel coefficient close to zero can amplify noise
+during equalization. A wrong modulation decision can produce a valid-looking
+bit array with a very high error count. Finally, a packet-success metric can
+be misinterpreted if it is calculated from a rounded BER instead of from
+the actual recovered bits. The implementation and tests address these cases
+at the appropriate stage.
+
+\section{Interpretation of the Stored Arrays}
+The stored arrays are indexed by SNR, but each index represents a collection
+of independently generated frames rather than one long continuous signal.
+This distinction matters when interpreting the curves. A sudden change in
+packet success can occur because a few frames move across the all-bits
+correct boundary even when the average BER changes only moderately. The
+decision-accuracy array is also a frame count, so it should be read
+together with the bit-level arrays.
+
+The adaptive BER and SER arrays contain the errors after the modulation
+decision has selected a demodulator. The fixed-QPSK arrays contain errors
+after the same corrected samples have been passed through the QPSK
+demodulator for every frame. Comparing these arrays under the same channel
+realizations makes the reference useful, while the two paths still measure
+different receiver assumptions.
+
+\section{How to Read the Figures}
+The main Phase-II figure uses separate panels because BER and SER are error
+fractions, decision accuracy and packet success are frame percentages, and
+throughput is measured in bits per symbol. Placing these quantities on one
+vertical scale would hide the low error values at high SNR. The separate
+panels also make it possible to see that decision accuracy reaches one
+before BER reaches zero.
+
+The parameter figures are not additional experiments. They are summaries of
+the same settings and records used by the experiment driver. The Phase-I
+training and confusion figures are retained as baseline evidence, whereas
+the Phase-II link figure is the principal result for this phase of the
+project. The comparison figure should therefore be read as a transition
+from recognition-only evaluation to receiver-level evaluation, not as a
+claim that the two phases use identical datasets or metrics.
+
+\section{Review of Reported Values}
+The abstract reports the 16 dB adaptive result because it is the highest
+SNR point in the defined sweep. Chapter 7 additionally reports 8, 10, 12,
+and 14 dB to show the transition region. Appendix B lists the complete
+adaptive and fixed-QPSK arrays. Rounded percentages are used in prose and
+tables, while the JSON record retains values such as 0.0009479603 for BER
+and 0.00171875 for SER. This prevents a rounded table entry from being
+mistaken for the underlying calculation.
+
+\section{Use in a Future Experiment}
+The same record structure can be extended with confidence, latency, pilot
+overhead, and channel-estimation error. A future hardware record should
+also include the sampling rate, centre frequency, gain setting, antenna
+configuration, and time of capture. Keeping these fields beside the
+metrics would allow a measured SDR result to be compared with the
+simulation without changing the definitions of BER, SER, packet success,
+or throughput.
+
+\section{Fixed-QPSK Reference Table}
+\begin{table}[htbp]
+\centering
+\small
+\caption{Fixed-QPSK BER and SER across the complete SNR sweep.}
+\label{tab:fixedqpskfull}
+\begin{tabular}{c c c}
+\toprule
+\textbf{SNR} & \textbf{Fixed-QPSK BER} & \textbf{Fixed-QPSK SER}\\
+\midrule
+$-4$ dB & 65.00\% & 82.24\%\\
+$-2$ dB & 62.93\% & 79.30\%\\
+0 dB & 62.27\% & 78.12\%\\
+2 dB & 60.50\% & 74.35\%\\
+4 dB & 61.35\% & 74.70\%\\
+6 dB & 61.33\% & 74.51\%\\
+8 dB & 58.75\% & 71.09\%\\
+10 dB & 58.86\% & 69.59\%\\
+12 dB & 57.84\% & 68.71\%\\
+14 dB & 57.31\% & 67.44\%\\
+16 dB & 59.45\% & 69.81\%\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Verification Record}
+\begin{table}[H]
+\centering
+\small
+\caption{Checks applied before accepting the Phase-II report results.}
+\label{tab:verificationrecord}
+\begin{tabular}{p{0.46\textwidth} p{0.33\textwidth}}
+\toprule
+\textbf{Check} & \textbf{Outcome}\\
+\midrule
+Clean modulation round trips & Passed\\
+Invalid input validation & Passed\\
+Clean constellation identification & Passed\\
+Python source compilation & Passed\\
+LaTeX compilation & Passed\\
+Figure paths in report & Verified\\
+Archive integrity & Passed\\
+Result values and tables & Matched\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Closing Interpretation}
+The additional tables in this appendix provide the numerical context behind
+the main figures. The adaptive receiver is not judged only by its best
+high-SNR point; its low-SNR failure region, fixed-QPSK comparison,
+decision-accuracy transition, and packet-level behaviour are all part of
+the Phase-II result. This broader interpretation is important when the
+receiver is later extended to measured SDR data.
 
 \section{Closing Note}
 The report follows the same preliminary pages, chapter sequence, appendix
