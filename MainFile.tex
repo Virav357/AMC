@@ -41,12 +41,12 @@
 \clearemptydoublepage
 \chapter*{Declaration}
 \addcontentsline{toc}{chapter}{\textbf{Declaration}}
-We hereby declare that the work presented in this report is our original
-Phase-II project work carried out under the guidance of
-\textbf{Dr. Golak Santra}. The implementation, experiments, analysis, and
-figures have been prepared for academic evaluation at Sardar Vallabhbhai
-National Institute of Technology, Surat. This report has not been submitted
-to any other university or institution for the award of a degree or diploma.
+We hereby declare that the work presented in this report is original and has
+been carried out by us under the guidance of \textbf{Dr. Golak Santra}. The
+design, implementation, experiments, analysis, and documentation presented
+here are prepared for the Phase-II evaluation of the B.Tech. project. This
+report has not been submitted, either in part or in full, to any other
+university or institution for the award of any degree or diploma.
 
 \vspace{2cm}
 \noindent
@@ -64,40 +64,42 @@ to any other university or institution for the award of a degree or diploma.
 \chapter*{Acknowledgment}
 \addcontentsline{toc}{chapter}{\textbf{Acknowledgment}}
 We express our sincere gratitude to our project guide, Dr. Golak Santra, for
-his technical guidance, regular feedback, and encouragement throughout the
-development of this Phase-II project. We thank the faculty members and staff
-of the Department of Electronics and Communication Engineering, SVNIT Surat,
-for providing the academic environment and facilities required for this work.
-We also acknowledge the contribution of every project member in system
-design, implementation, experiment verification, documentation, and review.
+his valuable guidance, technical suggestions, and continuous support during
+the development of this Phase-II project. We thank the faculty members and
+staff of the Department of Electronics and Communication Engineering, SVNIT
+Surat, for providing the academic environment and facilities required for
+the work. We also acknowledge the contribution of every group member in
+system design, implementation, result verification, and documentation.
 
 \clearemptydoublepage
 \chapter*{Abstract}
 \addcontentsline{toc}{chapter}{\textbf{Abstract}}
-This report presents the design and evaluation of an intelligent adaptive
-digital communication receiver based on automatic modulation classification.
-The objective of Phase II is to move beyond an isolated modulation-label
-prediction and construct a complete software transmitter--channel--receiver
-link. The transmitter generates information bits and maps them to BPSK, QPSK,
-8-PSK, or 16-QAM symbols. The signal is then passed through a block-Rayleigh
-fading channel with additive white Gaussian noise, carrier phase offset, and
-frequency offset.
+Automatic modulation classification is useful in receivers that must operate
+without complete prior knowledge of the transmitted waveform. The objective
+of this Phase-II project is to extend modulation recognition into a complete
+adaptive digital communication receiver. Instead of ending at a modulation
+label, the proposed system uses the estimated format to configure a
+demodulator and evaluates whether the transmitted information is recovered
+correctly.
 
-At the receiver, pilot-assisted synchronization and channel equalization are
-applied before estimating the modulation format. The estimated format selects
-the corresponding demodulator, and the recovered bits are compared with the
-original transmitted bits. The system is evaluated using bit error rate,
-symbol error rate, modulation-decision accuracy, packet success rate, and
-effective throughput. The experiment uses 200 frames at each SNR from
-$-4$~dB to $16$~dB with a fixed seed of 42.
+The transmitter generates random information bits and maps them to BPSK,
+QPSK, 8-PSK, or 16-QAM symbols. The symbols pass through a block-Rayleigh
+fading and additive-white-Gaussian-noise channel with carrier phase and
+frequency offsets. At the receiver, pilot-assisted synchronization and
+frame-level channel equalization are applied. A penalized
+nearest-constellation estimator selects the modulation, after which the
+corresponding demodulator recovers the bits. The experiment records bit error
+rate, symbol error rate, modulation-decision accuracy, packet success rate,
+and effective throughput over an SNR range of $-4$ to $16$ dB.
 
-At 16~dB, the adaptive receiver achieves 0.095\% BER, 0.172\% SER, 100\%
+The final experiment uses 200 frames per SNR and a fixed seed of 42. At
+16 dB, the receiver achieves 0.095\% BER, 0.172\% SER, 100\%
 modulation-decision accuracy, 75.5\% packet success, and 1.888
-bits/symbol effective throughput. The results demonstrate that modulation
-recognition becomes valuable when it is connected to receiver configuration
-and information recovery. The report also identifies the present simulation
-limitations and defines a path toward confidence-aware processing, coding,
-and software-defined radio validation.
+bits/symbol effective throughput. The results show that an AMC decision must
+be evaluated through the complete information path because a correct format
+decision and error-free bit recovery are different requirements. The report
+documents the Phase-II theory, communication architecture, algorithms,
+experimental setup, measured results, limitations, and future SDR extensions.
 
 \clearemptydoublepage
 \chapter*{List of Abbreviations}
@@ -126,488 +128,581 @@ SNR & Signal-to-Noise Ratio \\
 
 \chapter{Introduction}
 
-\section{Background}
-Wireless receivers increasingly operate in environments where the waveform,
-channel condition, and interference level are not fixed. A receiver intended
-for one known modulation can be efficient in a controlled link, but it is
-not sufficient for a non-cooperative, cognitive, or rapidly reconfigured
-system. Such a receiver must first interpret the incoming signal and then
-select a compatible processing chain.
+\section{Motivation and Background}
+Modern wireless systems operate in congested and dynamic spectrum
+environments. The transmitter may change its modulation, the channel may
+introduce fading and phase rotation, and several users may share adjacent
+frequency bands. A conventional receiver is normally configured with the
+modulation and synchronization parameters before data reception begins. This
+assumption is unsuitable for a non-cooperative receiver, a cognitive-radio
+node, or a monitoring station that must process unknown signals.
 
-Automatic modulation classification is the signal-processing function that
-estimates the modulation format from received samples. It is useful in
-cognitive radio, spectrum monitoring, interference identification, military
-communications, and adaptive physical-layer systems. Conventional methods
-use likelihood tests, higher-order statistics, cyclostationary features, or
-expert-designed rules. These methods are interpretable, but their performance
-can change substantially with noise, fading, synchronization error, and
-uncertainty in the signal model \cite{proakis2008digital,goldsmith2005wireless}.
+Automatic modulation classification is the task of identifying the
+modulation format from received samples. It supports adaptive demodulation,
+spectrum monitoring, electronic support systems, interference analysis, and
+waveform-aware resource allocation. Classical approaches use likelihood
+tests, higher-order moments, cumulants, and cyclostationary features. These
+methods are physically interpretable, but their performance depends on the
+observation length, channel assumptions, and quality of synchronization
+\cite{haykin2005cognitive,azzouznandi1996,proakis2008digital}.
 
-\section{Phase-II Motivation}
-The central engineering question in this phase is not only whether a receiver
-can name a modulation. The important question is whether that decision can be
-used to recover information reliably. A classification result that is never
-connected to a demodulator does not quantify the effect of recognition on a
-real communication link. Phase II therefore implements the complete signal
-path from random information bits to recovered bits.
+Deep learning has provided another route by learning signal representations
+directly from I/Q samples. A neural classifier can identify local temporal
+patterns and phase relationships without requiring a separate handcrafted
+feature-design stage \cite{oshea2016convolutional,goodfellow2016dl}. However,
+a classification accuracy value alone does not demonstrate that a receiver
+can recover the transmitted information. The communication consequence of a
+wrong modulation decision must be measured after demodulation.
 
-The earlier project work provides the motivation for modulation recognition,
-but this report intentionally focuses on the new Phase-II communication
-system. The new implementation adds the transmitter, channel, receiver
-control, demodulation, bit comparison, and communication-level metrics.
+\section{Applications of AMC}
+AMC is relevant to cognitive radio, where a receiver senses a waveform and
+selects a compatible processing chain. It is also useful in spectrum
+surveillance, where several unknown signals must be characterized from short
+observations. In adaptive wireless systems, modulation recognition can
+support mode selection, link adaptation, and interference-aware processing.
+In software-defined radio, the classifier can act as a control block between
+the digitized signal and a bank of candidate demodulators.
 
-\section{Problem Statement}
-The problem addressed in this project is the design of an adaptive digital
-communication receiver that can identify one of several candidate modulation
-formats and configure its demodulator under realistic simulated channel
-impairments. The receiver must be evaluated using measurements that describe
-information recovery rather than only a label-level accuracy.
+These applications impose requirements that are different from a static
+classification benchmark. The receiver must operate across channel
+conditions, report confidence or uncertainty, and provide a measurable
+benefit to the recovered information. Phase II is designed around this
+system-level requirement.
 
-\section{Aim and Objectives}
-The aim is to develop a reproducible Phase-II communication experiment with
-the following objectives:
+\section{Problem Definition and Objectives}
+\textbf{Problem Statement:} Design and evaluate an adaptive digital
+communication receiver that estimates the transmitted modulation and uses
+that estimate to recover information bits under noise, fading, phase offset,
+and frequency offset.
+
+The objectives of the project are:
 \begin{enumerate}
-\item Generate random information frames using multiple digital modulation
-      formats.
-\item Model AWGN, block-Rayleigh fading, carrier phase offset, and frequency
-      offset in a controlled link.
-\item Apply synchronization and channel equalization before modulation
-      estimation.
-\item Select a demodulator automatically from the estimated modulation.
-\item Measure BER, SER, packet success, effective throughput, and decision
-      accuracy over a defined SNR range.
-\item Compare adaptive processing with a receiver fixed to QPSK.
-\item Preserve exact experiment settings and numerical outputs for panel
-      verification and future SDR implementation.
+\item Generate reproducible information frames using BPSK, QPSK, 8-PSK, and
+      16-QAM.
+\item Model a block-Rayleigh and AWGN channel with carrier impairments.
+\item Apply pilot-assisted synchronization and channel equalization.
+\item Estimate the modulation format using received constellation structure.
+\item Select a compatible demodulator automatically.
+\item Measure BER, SER, packet success, throughput, and decision accuracy.
+\item Compare adaptive processing with a fixed-QPSK receiver.
+\item Prepare a professional, reproducible Phase-II report and package.
 \end{enumerate}
 
-\section{New Work Completed in Phase II}
-The following items are the principal additions made in this phase:
-\begin{itemize}
-\item A four-format digital transmitter supporting BPSK, QPSK, 8-PSK, and
-      16-QAM.
-\item A configurable block-Rayleigh and AWGN channel with carrier
-      impairments.
-\item Pilot-assisted correction and frame-level channel equalization.
-\item A constellation-distance modulation estimator with a complexity
-      penalty for fair comparison of different constellation sizes.
-\item Adaptive demodulator selection followed by recovered-bit validation.
-\item A fixed-QPSK reference receiver for an engineering comparison.
-\item A complete SNR sweep with BER, SER, packet, throughput, and decision
-      metrics stored in machine-readable form.
-\end{itemize}
+\section{Contributions}
+The main contribution is a complete transmitter--channel--receiver
+simulation in which modulation recognition controls demodulation. The work
+adds four digital modulation formats, configurable channel impairments,
+frame-level correction, an interpretable estimator, adaptive bit recovery,
+and a fixed-modulation reference. It also introduces communication-level
+evaluation rather than reporting only a class label.
 
 \section{Scope and Limitations}
-The work is a software simulation intended to validate the receiver concept.
-It does not claim over-the-air performance. Pulse shaping, matched filtering,
-timing-loop implementation, forward-error correction, interleaving,
-retransmission, and hardware measurements are reserved for future work.
-Pilot-assisted correction is used so that the Phase-II contribution can be
-studied without hiding it behind an unfinished hardware synchronization loop.
+The current work is a controlled software simulation. It includes a flat
+block-fading model, AWGN, carrier phase and frequency offsets, and
+pilot-assisted correction. Pulse shaping, matched filtering, timing-loop
+implementation, forward-error correction, interleaving, retransmission, and
+over-the-air SDR measurements are outside the present scope. These
+limitations are stated explicitly so that simulation results are not
+presented as hardware measurements.
 
-\section{Report Organization}
-Chapter 2 reviews the technical literature and establishes the engineering
-gap. Chapter 3 develops the signal, channel, synchronization, modulation,
-and metric models. Chapter 4 presents the complete Phase-II architecture.
-Chapter 5 explains the algorithms and design decisions. Chapter 6 describes
-the implementation and experimental protocol without embedding program
-commands in the report. Chapter 7 presents measured results and failure
-analysis. Chapter 8 concludes the work and proposes future extensions.
+\section{Organization of the Report}
+Chapter 2 reviews classical AMC, deep-learning approaches, communication
+receiver design, and the research gap. Chapter 3 presents the mathematical
+background of complex baseband signals, digital modulation, channel
+impairments, synchronization, and evaluation metrics. Chapter 4 describes
+the generated Phase-II data, modulation classes, preprocessing, and
+experimental record. Chapter 5 explains the proposed receiver methodology
+and design. Chapter 6 describes implementation and experimental setup.
+Chapter 7 presents measured results and discussion. Chapter 8 concludes the
+work and identifies future extensions.
 
 \chapter{Literature Review}
 
-\section{Classical Modulation Recognition}
-Classical automatic modulation recognition methods generally use either
-decision-theoretic or feature-based processing. Likelihood-based methods
-compare a received sequence with probability models for candidate waveforms.
-They can be effective when the noise, channel, and synchronization parameters
-are known accurately, but their computational and modelling requirements
-increase when the receiver is uncertain about the environment.
+\section{Classical AMC Approaches}
+Early AMC systems used statistical moments, higher-order cumulants,
+likelihood functions, and cyclostationary features. Higher-order statistics
+can distinguish modulation families because the distribution of a received
+signal changes with the waveform. Cyclostationary methods exploit periodic
+features introduced by symbol timing, carrier structure, or framing
+\cite{gardner1988,azzouznandi1996}.
 
-Feature-based methods use moments, cumulants, spectral characteristics, or
-cyclostationary statistics. These methods provide useful physical
-interpretation and may be implemented efficiently. Their limitation is that
-the selected features can lose discriminative information under short
-observation windows, deep fading, or frequency offset
-\cite{azzouznandi1996,goldsmith2005wireless}.
+The advantage of classical methods is interpretability. A designer can
+identify which feature is responsible for a decision and can often estimate
+the computational complexity analytically. Their limitation is sensitivity
+to observation length and model mismatch. Noise, fading, carrier offset,
+frequency-selective propagation, and nonlinear hardware can alter the
+statistics on which the decision depends.
 
-\section{Deep Learning for I/Q Signals}
-Deep learning enables a receiver to learn a representation directly from
-complex baseband samples. Convolutional networks are suitable for I/Q data
-because local filters can capture amplitude, phase, and short temporal
-patterns. RadioML-style datasets have made it possible to compare raw-I/Q
-classifiers under common synthetic channel conditions
-\cite{oshea2016convolutional}.
+\section{Likelihood and Feature-Based Methods}
+Likelihood-based AMC compares the received sequence with a probability model
+for every candidate modulation. When the channel and noise parameters are
+known, such methods can be statistically efficient. In practical systems,
+the required likelihood model is difficult to maintain because the receiver
+may not know the exact fading, synchronization, or hardware condition.
 
-However, a classifier benchmark is not equivalent to a communication-link
-evaluation. A label can be correct while the remaining receiver chain is
-unable to recover data, and a label error can have a much larger consequence
-when it selects the wrong demodulator. Phase II addresses this systems-level
-gap.
+Feature-based systems reduce the computational burden by extracting moments,
+spectral features, cyclic features, or instantaneous amplitude and phase
+statistics. They can provide a useful compromise between complexity and
+performance, but their success depends on choosing features that remain
+discriminative at low SNR. Phase II uses a constellation-based estimator
+because it is transparent and directly connected to demodulator selection.
 
-\section{Channel-Aware Receiver Design}
-Wireless communication theory shows that fading, additive noise, and carrier
-impairments directly alter the received constellation. A practical receiver
-must estimate or compensate these effects before making a reliable decision.
-The block-Rayleigh model is useful for controlled experiments because it
-represents a frame-level channel change while keeping the experiment
-tractable \cite{proakis2008digital}.
+\section{Deep Learning for AMC}
+Deep learning changed the AMC workflow by allowing features to be learned
+from raw I/Q sequences. Convolutional neural networks are attractive because
+one-dimensional filters can detect local waveform patterns, short phase
+transitions, and amplitude relationships. RadioML-style datasets have
+provided a common basis for studying these models
+\cite{oshea2016convolutional,oshea2016generative}.
 
-\section{Over-the-Air Considerations}
-Simulation results provide repeatable evidence, but an SDR introduces
-additional effects such as front-end filtering, oscillator phase noise,
-automatic-gain-control transients, antenna response, frequency-selective
-multipath, and timing drift. Over-the-air studies have shown that these
-effects can reduce performance relative to a clean synthetic benchmark
-\cite{oshea2016generative}. For this reason, the present report treats SDR
-validation as the next engineering stage rather than claiming that the
-simulation is already a hardware measurement.
+The main limitation of a classifier-only evaluation is that the output is
+often treated as the final result. A high classification accuracy does not
+directly specify the BER after a receiver uses the decision. Conversely, an
+incorrect decision may select an incompatible demodulator and cause a much
+larger information loss than a single classification error suggests.
 
-\section{Research Gap and Phase-II Position}
-The reviewed approaches demonstrate strong tools for classification and
-communication processing, but many experiments stop at a modulation label or
-evaluate a receiver with a modulation known in advance. The Phase-II
-contribution is the connection between these two stages. The estimated
-modulation controls demodulation, and the final result is judged by the
-quality of the recovered information.
+\section{Adaptive Receiver Design}
+An adaptive receiver contains a sensing or recognition stage followed by a
+configuration stage. The configuration stage may select a demodulator,
+symbol mapping, coding mode, timing method, or channel-estimation strategy.
+This makes receiver performance dependent on both recognition and subsequent
+signal processing.
 
+The Phase-II design follows this principle. The estimator does not operate
+as an isolated classifier. Its output selects one of four demodulators, and
+the receiver compares the recovered bits with the transmitted bits. This
+creates a traceable relationship between waveform uncertainty and
+communication reliability.
+
+\section{Over-the-Air Generalization}
+Synthetic experiments provide repeatability and controlled comparison, but
+they do not include every effect present in an RF front-end. Oscillator phase
+noise, automatic-gain-control transients, antenna response, analog filtering,
+frequency-selective multipath, and timing drift can reduce performance when
+a system moves to an SDR. Over-the-air studies have shown the importance of
+these effects \cite{oshea2016generative}.
+
+The present report therefore treats the simulation as an engineering
+validation stage. The channel model is sufficiently rich to expose
+modulation-decision and bit-recovery failures, while remaining reproducible
+for a project evaluation. Hardware validation is proposed as the next stage.
+
+\section{Benchmark Datasets and Tooling}
+RadioML 2016.10a is a widely used benchmark for raw-I/Q modulation
+classification. It is useful for retaining an earlier AMC baseline, but the
+new Phase-II link is evaluated with generated information frames so that
+BER and packet success can be measured directly. Python, NumPy, Matplotlib,
+and PyTorch provide the numerical and visualization environment used by the
+project \cite{pytorchdocs}.
+
+\section{Summary of Representative Studies}
 \begin{table}[H]
 \centering
 \small
-\caption{Engineering position of the Phase-II project.}
-\label{tab:literatureposition}
-\begin{tabular}{p{0.25\textwidth} p{0.29\textwidth} p{0.34\textwidth}}
+\caption{Representative studies and their relation to the Phase-II work.}
+\label{tab:literature}
+\begin{tabular}{p{0.23\textwidth} p{0.29\textwidth} p{0.34\textwidth}}
 \toprule
-\textbf{Area} & \textbf{Common endpoint} & \textbf{Phase-II extension}\\
+\textbf{Reference} & \textbf{Approach} & \textbf{Relevance to this project}\\
 \midrule
-Classical AMC & Feature or likelihood decision &
-Decision is passed to the communication receiver.\\
-Deep-learning AMC & Modulation label and accuracy &
-Recognition is treated as a receiver-control function.\\
-Link simulation & Known modulation demodulator &
-Demodulator is selected from the estimated modulation.\\
-Performance analysis & Accuracy or BER alone &
-BER, SER, packet success, throughput, and decision accuracy are reported.\\
+Gardner~\cite{gardner1988} & Cyclostationary analysis &
+Provides interpretable signal features for detection.\\
+Azzouz and Nandi~\cite{azzouznandi1996} & Statistical AMC &
+Shows the importance of feature and channel assumptions.\\
+O'Shea and Corgan~\cite{oshea2016convolutional} & CNN on raw I/Q &
+Motivates data-driven waveform recognition.\\
+O'Shea \textit{et al.}~\cite{oshea2016generative} &
+Over-the-air classification & Demonstrates the need for realistic validation.\\
+This project & Adaptive communication receiver &
+Connects modulation estimation to demodulation and BER.\\
 \bottomrule
 \end{tabular}
 \end{table}
+
+\section{Research Gap}
+Many AMC studies end after predicting a modulation label, while many link
+simulations assume that the modulation is already known. The engineering gap
+between these two stages is whether the recognition result can configure a
+useful receiver and deliver reliable information. Phase II addresses this gap
+by evaluating the complete path from generated bits to recovered bits.
 
 \chapter{Theoretical Background}
 
-\section{Complex Baseband Representation}
-A passband waveform can be represented in complex baseband form as
+\section{Baseband Signal Model}
+A passband signal can be represented in complex baseband form as
 \begin{equation}
 x[n]=I[n]+jQ[n],
 \end{equation}
-where $I[n]$ and $Q[n]$ are the in-phase and quadrature components. This
-representation preserves the amplitude and phase information required by
-PSK and QAM demodulators while allowing the channel and receiver to be
-implemented using discrete-time complex arithmetic.
+where $I[n]$ and $Q[n]$ are the in-phase and quadrature components. The
+complex representation preserves amplitude and phase information while
+allowing the transmitter, channel, and receiver to be implemented as
+discrete-time operations.
 
-\section{Digital Modulation Formats}
-The Phase-II receiver supports four formats. BPSK transmits one bit per
-symbol using two opposite phase points and provides the largest angular
-decision margin. QPSK transmits two bits per symbol using four phase points.
-8-PSK increases the symbol rate to three bits per symbol but reduces the
-angular separation between neighboring points. 16-QAM transmits four bits
-per symbol using both amplitude and phase, giving higher spectral efficiency
-at the cost of greater sensitivity to noise and gain or phase error.
+For a frame of $N$ symbols, the transmitter generates
+$x[0],x[1],\ldots,x[N-1]$. The receiver observes a corrupted sequence and
+must estimate the format before applying a symbol-to-bit mapping. The
+quality of this estimate affects every subsequent stage.
+
+\section{Digital Modulation Families}
+BPSK uses two opposite phase points and carries one bit per symbol. Its large
+decision separation makes it robust, but its spectral efficiency is low.
+QPSK uses four phase points and carries two bits per symbol, providing a
+common balance between robustness and rate. 8-PSK carries three bits per
+symbol by reducing angular separation. 16-QAM uses both amplitude and phase
+and carries four bits per symbol, but requires more accurate gain, phase,
+and noise control.
 
 \begin{table}[H]
 \centering
 \small
-\caption{Candidate modulation formats in the Phase-II link.}
-\label{tab:modulations}
-\begin{tabular}{p{0.23\textwidth} c c p{0.37\textwidth}}
+\caption{Digital modulation formats used by the Phase-II receiver.}
+\label{tab:modulationfamilies}
+\begin{tabular}{p{0.22\textwidth} c c p{0.38\textwidth}}
 \toprule
-\textbf{Format} & \textbf{Order} & \textbf{Bits/symbol} & \textbf{Main property}\\
+\textbf{Format} & \textbf{Order} & \textbf{Bits/symbol} & \textbf{Characteristic}\\
 \midrule
-BPSK & 2 & 1 & Robust binary phase detection.\\
-QPSK & 4 & 2 & Balance between robustness and spectral efficiency.\\
-8-PSK & 8 & 3 & Higher rate with smaller phase separation.\\
-16-QAM & 16 & 4 & High rate using amplitude and phase states.\\
+BPSK & 2 & 1 & Two phase states and large decision margin.\\
+QPSK & 4 & 2 & Four phase states and moderate spectral efficiency.\\
+8-PSK & 8 & 3 & Higher rate with reduced angular separation.\\
+16-QAM & 16 & 4 & Amplitude and phase states for high rate.\\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\section{Phase-II Channel Model}
-For transmitted symbols $x[n]$, the received sample is modelled as
+\section{Channel Impairments}
+The Phase-II received signal is modelled as
 \begin{equation}
 y[n]=h\,x[n]e^{j(2\pi\Delta f n+\phi)}+w[n],
 \end{equation}
-where $h$ is a complex block-Rayleigh coefficient, $\Delta f$ is the
-normalized frequency offset, $\phi$ is the carrier phase offset, and $w[n]$
-is complex AWGN. The coefficient remains constant during a frame and changes
-between frames.
+where $h$ is a complex block-Rayleigh channel coefficient, $\Delta f$ is a
+normalized frequency offset, $\phi$ is a carrier phase offset, and $w[n]$
+is complex AWGN. The coefficient is constant during one frame and changes
+between frames, allowing fading to affect packet-level performance.
 
-\section{Noise and Signal-to-Noise Ratio}
-The selected signal-to-noise ratio is
+Rayleigh fading changes the amplitude and phase of the signal without a
+dominant line-of-sight component. AWGN introduces random perturbations whose
+variance is controlled by the selected SNR. Phase offset rotates the entire
+constellation, while frequency offset produces a rotation that changes with
+sample index. These impairments test different aspects of receiver
+correction and constellation recognition.
+
+\section{Signal-to-Noise Ratio}
+The signal-to-noise ratio is defined as
 \begin{equation}
 \mathrm{SNR}_{dB}=10\log_{10}\left(\frac{P_s}{P_n}\right),
 \end{equation}
-where $P_s$ is the average signal power and $P_n$ is the average noise power.
-The simulation scales complex noise consistently across the candidate
-formats, allowing their performance to be compared under the same SNR
-definition.
+where $P_s$ is the average signal power and $P_n$ is the average noise
+power. The simulation normalizes the candidate constellations and scales
+complex Gaussian noise from the selected SNR so that the modulation formats
+are compared under one common convention.
 
-\section{Pilot-Assisted Synchronization}
-The software experiment uses a frame-level pilot-assisted estimate of the
-channel and carrier correction. The received sequence is first compensated
-for the known simulated phase and frequency rotation and then equalized by
+\section{Synchronization and Equalization}
+In a practical receiver, synchronization includes automatic gain control,
+timing recovery, carrier-frequency estimation, carrier-phase recovery, and
+channel estimation. Phase II uses a pilot-assisted simulation estimate for
+the frame-level carrier and channel parameters. This isolates the new
+adaptive-modulation problem from an unfinished hardware synchronization loop.
+
+After carrier correction, the frame is equalized using
 \begin{equation}
 \hat{x}[n]=\frac{y[n]}{h}.
 \end{equation}
-This model represents the function of a synchronization and channel-estimate
-block without claiming that the required parameters are known in a real
-receiver. An SDR implementation will replace this idealized estimate with
-pilot detection, timing recovery, carrier recovery, and a noisy channel
-estimator.
+The corrected samples are normalized before their distance to each candidate
+constellation is calculated. The limitation of this controlled estimate is
+explicitly discussed in the results chapter.
 
-\section{Modulation Estimation}
-For a candidate constellation $\mathcal{C}_m$, the estimator computes the
-average distance from each corrected sample to its nearest constellation
-point. A penalty prevents a high-order constellation from winning only
-because it has more points:
-\begin{equation}
-\hat{m}=\arg\min_m\left(d_m+\lambda\log_2|\mathcal{C}_m|\right).
-\end{equation}
-The selected index is converted into the corresponding demodulation rule.
-This estimator is interpretable and deterministic, which makes it useful for
-verifying the communication path before replacing it with an online learned
-classifier.
+\section{AMC Approaches}
+The project distinguishes three receiver actions. A fixed receiver applies
+one known demodulator to every frame. A classifier-only receiver produces a
+label but does not recover information. The proposed adaptive receiver
+estimates the format and passes the decision to the corresponding
+demodulator. This third arrangement is the focus of Phase II.
 
 \section{Communication Metrics}
-The bit error rate and symbol error rate are defined as
+The bit error rate and symbol error rate are
 \begin{equation}
 \mathrm{BER}=\frac{N_{\mathrm{bit,error}}}{N_{\mathrm{bit,total}}},
 \qquad
 \mathrm{SER}=\frac{N_{\mathrm{symbol,error}}}{N_{\mathrm{symbol,total}}}.
 \end{equation}
-A packet is counted as successful only when every recovered bit in its frame
-matches the transmitted frame. Effective throughput is the average number of
-information bits per symbol multiplied by the packet-success probability.
-This definition makes packet success stricter than BER and exposes the
-impact of occasional errors on complete-frame delivery.
+A packet is successful only when every bit in its frame is recovered
+correctly. If $b_m$ is the bits-per-symbol value of the selected modulation,
+the effective throughput is the average of $b_m$ multiplied by the
+packet-success indicator. Therefore, packet success is stricter than BER
+and exposes the practical effect of even a small number of bit errors.
 
-\chapter{Proposed Phase-II System Architecture}
+\chapter{Dataset and Preprocessing}
 
-\section{System Overview}
-The proposed system is an end-to-end adaptive digital receiver. It contains
-five functional stages: information generation, modulation and transmission,
-channel impairment, receiver correction and estimation, and adaptive
-demodulation with metric calculation. The architecture is deliberately
-modular so that the simulated channel and estimator can later be replaced by
-an SDR front-end or a learned classifier.
+\section{Phase-II Data Generation}
+Unlike a classification-only experiment, the Phase-II link begins with
+information bits rather than pre-labelled signal windows. For every frame,
+a reproducible random generator creates a binary sequence. One of the four
+candidate modulation formats is selected, and the bits are grouped according
+to its order. The resulting complex symbols are retained as the transmitter
+reference for later error calculation.
+
+Each frame contains 256 symbols. Thus, BPSK frames contain 256 information
+bits, QPSK frames contain 512 bits, 8-PSK frames contain 768 bits, and
+16-QAM frames contain 1024 bits. Using the same symbol-frame length makes
+packet-level comparisons consistent while allowing the information rate to
+change with modulation order.
+
+\section{Modulation Classes}
+\begin{table}[H]
+\centering
+\small
+\caption{Modulation classes used to generate Phase-II communication frames.}
+\label{tab:phase2classes}
+\begin{tabular}{p{0.23\textwidth} p{0.23\textwidth} p{0.38\textwidth}}
+\toprule
+\textbf{Class} & \textbf{Bits/symbol} & \textbf{Use in the experiment}\\
+\midrule
+BPSK & 1 & Robust low-order reference.\\
+QPSK & 2 & Fixed-receiver comparison format.\\
+8-PSK & 3 & Higher-order phase modulation.\\
+16-QAM & 4 & High spectral-efficiency format.\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Constellation Normalization}
+The constellation points are normalized to a common average-power
+convention. This avoids giving one format an artificial advantage because
+of a larger absolute amplitude. After channel correction, the received
+symbols are placed on the same scale before nearest-point distances are
+compared.
+
+\section{Channel Data Preparation}
+For each generated frame, the channel draws a block-Rayleigh coefficient,
+carrier phase, frequency offset, and complex AWGN realization. The SNR is
+selected from the sweep
+\[
+-4,-2,0,2,4,6,8,10,12,14,16\ \mathrm{dB}.
+\]
+The transmitted bits, transmitted symbols, received samples, estimated
+format, recovered bits, and error counts are retained until all frame-level
+metrics have been calculated.
+
+\section{Preprocessing at the Receiver}
+The receiver applies the inverse simulated carrier rotation and equalizes
+the block channel before estimation. The corrected samples are normalized
+using the candidate constellation scale. This operation is not a
+replacement for a practical timing loop; it is a controlled preprocessing
+stage that makes the contribution of adaptive modulation measurable.
+
+\section{Experiment Split and Repetition}
+The communication experiment is not divided into train, validation, and test
+subsets because it is a link simulation rather than a supervised training
+run. Instead, every SNR value is evaluated using 200 independently generated
+frames with seed 42. The same modulation list, frame length, channel model,
+and metric definitions are used at every SNR.
+
+\section{Data Integrity and Reproducibility}
+The complete numerical arrays are written to a JSON record. This record
+contains the SNR values, adaptive and fixed-receiver BER and SER, decision
+accuracy, packet success, throughput, modulation list, frame count, and seed.
+Figures are generated from the same record, preventing manual transcription
+errors between the experiment and the report.
+
+\section{Limitations of the Generated Data}
+The data is generated by a controlled software channel and therefore does
+not include antenna response, analog filtering, oscillator phase noise,
+frequency-selective multipath, timing drift, or hardware nonlinearity. The
+generated frames are appropriate for algorithm verification and comparative
+analysis, but a future SDR experiment is required before making claims about
+over-the-air performance.
+
+\chapter{Proposed Methodology and Model Design}
+
+\section{End-to-End Pipeline}
+The proposed Phase-II pipeline is
+\begin{equation}
+\begin{aligned}
+\text{random bits}
+\rightarrow\text{modulator}
+\rightarrow\text{channel}
+\rightarrow\text{correction}
+\rightarrow\text{AMC decision}
+\rightarrow{}\\
+\text{adaptive demodulator}
+\rightarrow\text{recovered bits}.
+\end{aligned}
+\end{equation}
+The final bit sequence is compared with the transmitter reference. This
+pipeline is intentionally different from a classifier-only workflow because
+the modulation decision controls a subsequent physical-layer operation.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.86\linewidth]{artifacts/phase2-system-architecture.png}
-\caption{Functional architecture of the Phase-II adaptive receiver.}
-\label{fig:architecture}
+\caption{End-to-end Phase-II adaptive communication receiver.}
+\label{fig:pipeline}
 \end{figure}
 
-\section{Transmitter}
-At the start of every frame, a reproducible random generator creates a binary
-information sequence. One modulation format is selected from BPSK, QPSK,
-8-PSK, and 16-QAM. Groups of one, two, three, or four bits are mapped to
-normalized complex constellation points. Each frame contains 256 symbols,
-so the number of transmitted bits depends on the selected format.
+\section{Transmitter Model}
+The transmitter selects a modulation and groups the random bits into
+symbols. The mapper produces normalized complex points according to the
+selected constellation. The mapping is deterministic and is reused by the
+corresponding demodulator, so a clean round-trip test should recover all
+bits exactly.
 
-\section{Impairment Channel}
-The channel applies a complex block-Rayleigh coefficient, rotates the frame
-with a random phase and frequency offset, and adds SNR-controlled AWGN. This
-combination tests both amplitude and phase robustness. The channel is not
-intended to reproduce every RF effect; it is a controlled stress model that
-makes the effect of adaptive modulation measurable.
+\section{Channel Model}
+The channel applies block fading, carrier rotation, and AWGN in sequence.
+Block fading changes the amplitude and phase of a complete frame. Carrier
+phase offset rotates the constellation, while frequency offset causes a
+progressive rotation. AWGN controls the SNR-dependent uncertainty that
+eventually produces both estimator errors and symbol errors.
 
 \section{Receiver Front-End}
-The receiver first corrects the simulated carrier rotation and equalizes the
-frame-level fading coefficient. The corrected samples are normalized using
-the same constellation convention used by the estimator. This stage produces
-a signal representation in which the distance between the received points
-and candidate constellations can be compared fairly.
+The receiver front-end reverses the simulated carrier rotation and divides by
+the block channel coefficient. The output is a corrected complex sequence.
+In an SDR implementation, this stage would be replaced by a timing
+recovery loop, pilot detector, carrier-recovery loop, and channel estimator.
+The current design keeps the estimate controlled so that the adaptive
+demodulation contribution can be isolated.
 
-\section{Adaptive Decision and Demodulation}
-The estimator evaluates all four candidate constellations and returns the
-format with the lowest penalized distance. The receiver then invokes the
-matching demodulator and reconstructs the bit sequence. The decision is
-recorded independently from bit recovery, so the experiment can distinguish
-an incorrect modulation decision from errors caused by noise within the
-correct demodulator.
+\section{Constellation-Distance Estimator}
+Let $\mathcal{C}_m$ denote the normalized constellation for candidate format
+$m$. For each corrected received sample, the estimator finds the nearest
+point in $\mathcal{C}_m$ and calculates the average distance $d_m$. It then
+selects
+\begin{equation}
+\hat{m}=\arg\min_m\left(d_m+\lambda\log_2|\mathcal{C}_m|\right),
+\end{equation}
+where the penalty discourages a high-order constellation from winning only
+because it contains more possible points.
 
-\section{Fixed-QPSK Reference}
-The fixed-QPSK receiver always applies QPSK demodulation, regardless of the
-transmitted format. It is not expected to recover mixed-modulation traffic
-well, but it provides a useful engineering reference. The comparison
-illustrates the cost of assuming one format and the benefit of adapting to
-the observed signal.
+\section{Adaptive Demodulator}
+The estimated format selects one of four demodulation rules. Each corrected
+sample is assigned to its nearest point, and the point index is converted
+back to bits using the transmitter's mapping. The recovered bits are aligned
+with the original frame and compared bit by bit. The estimator decision is
+recorded separately so that decision errors and within-format detection
+errors can be distinguished.
 
-\section{Data Flow and Failure Propagation}
-The architecture creates a measurable failure chain. A poor channel
-condition can produce an uncertain constellation estimate. An incorrect
-estimate selects the wrong demodulator. The wrong demodulator changes the
-recovered bit sequence, increasing BER and SER. Even a small number of bit
-errors can reduce packet success to zero for a frame. Reporting these values
-together is therefore more informative than reporting one classification
-number.
+\section{Fixed-QPSK Baseline}
+The fixed-QPSK receiver applies the QPSK demodulator regardless of the
+transmitted format. It represents a system that does not perform modulation
+adaptation. Its performance is expected to remain poor for BPSK, 8-PSK, and
+16-QAM frames, but it provides a useful reference for measuring the value of
+adaptive selection.
 
-\chapter{Methodology and Algorithms}
+\section{Failure Propagation}
+The system has a clear failure chain. At low SNR, constellation points
+overlap and the estimator may choose the wrong format. The wrong format
+selects an incompatible demodulator, which can create many bit errors.
+Even when the estimated format is correct, noise can move individual points
+across decision boundaries. A single bit error is sufficient to mark a
+complete packet unsuccessful.
 
-\section{Frame Generation Procedure}
-The experiment uses a fixed random seed and a fixed number of frames at each
-SNR. For each frame, the transmitter selects a modulation, generates the
-required number of bits, maps them to symbols, and stores the original bits
-and symbols as the reference. The channel then produces the received
-sequence and the receiver processes it without changing the experiment
-parameters.
-
-\section{Channel Processing Procedure}
-For every frame, the channel draws a complex fading coefficient and carrier
-offset parameters. It applies the multiplicative channel and rotation before
-adding complex Gaussian noise. The noise variance is selected from the
-requested SNR and the normalized signal power. The same procedure is used
-for each candidate format, avoiding a hidden advantage for one modulation.
-
-\section{Constellation-Distance Algorithm}
-The estimator follows these steps:
-\begin{enumerate}
-\item Correct the received sequence using the simulated pilot-assisted
-      carrier and channel estimate.
-\item Normalize the corrected sequence to the candidate constellation scale.
-\item For each candidate format, calculate the nearest-point distance for
-      every received sample.
-\item Average the distances and add the order-dependent complexity penalty.
-\item Select the format with the minimum penalized score.
-\end{enumerate}
-The estimator is intentionally transparent. A panel member can inspect the
-candidate points, distance score, and selected format without depending on
-an opaque output.
-
-\section{Bit Recovery Algorithm}
-After a modulation decision, the corresponding nearest-point demodulator
-maps every corrected symbol to its closest valid constellation point. The
-point index is converted back to bits using the same mapping used by the
-transmitter. The recovered sequence is aligned with the transmitted
-sequence, and bit and symbol mismatches are counted.
-
-\section{Packet and Throughput Calculation}
-For each frame, packet success is one if the recovered bit sequence is
-identical to the transmitted sequence and zero otherwise. The throughput
-contribution is the modulation's bits per symbol multiplied by this success
-indicator. Averaging over the 200 frames at an SNR gives the reported
-packet-success probability and effective bits per symbol.
-
-\section{Experimental Design}
-The final sweep covers $-4,-2,\ldots,16$~dB. At each point, 200 frames are
-processed with the four modulation formats. The same seed, frame length,
-channel model, and estimator are retained for all points. The resulting
-arrays are written to a JSON record before the plots are generated, ensuring
-that the figures and the numerical values in this report refer to the same
-experiment.
-
-\section{Verification Strategy}
-The implementation was verified using unit tests for modulation round trips,
-input validation, constellation identification, and deterministic data
-handling. The report package was also checked for missing figure references,
-balanced LaTeX braces, clean whitespace, and the presence of the style-file
-dependency required by the SVNIT template.
+\section{Design Rationale}
+The Phase-II estimator is deliberately interpretable rather than opaque. A
+panel member can inspect the candidate constellations, distance scores,
+selected modulation, recovered symbols, and final bit metrics. This design
+also provides a stable communication baseline for future replacement by a
+trained CNN or a confidence-aware learned estimator.
 
 \chapter{Implementation and Experimental Setup}
 
-\section{Software Organization}
-The implementation is divided into reusable communication primitives,
-experiment drivers, figure-generation utilities, tests, and generated
-artifacts. The communication module contains constellation definitions,
-symbol mapping, channel impairment, estimator, equalizer, and demodulator
-logic. The experiment driver coordinates the SNR sweep and writes the
-machine-readable result record. The figure utilities consume that record so
-that figures are not manually recreated from rounded values.
+\section{Software and Tools}
+The project is implemented in Python using NumPy for numerical operations,
+Matplotlib for figures, PyTorch for the retained learning components, and
+pytest for automated verification. The source is organized into reusable
+communication primitives, an experiment driver, visualization utilities,
+tests, and report artifacts. The report does not include executable command
+blocks; the repository documentation contains the operational instructions.
 
-\section{Implementation Parameters}
+\section{Experimental Environment}
+The final communication experiment is deterministic at the experiment level.
+The random seed is 42, the frame length is 256 symbols, and 200 frames are
+processed at each SNR. The channel and estimator parameters are held
+constant across the sweep, allowing changes in the curves to be interpreted
+primarily as SNR effects.
+
+\section{Hyperparameters and Link Parameters}
 \begin{table}[H]
 \centering
 \small
-\caption{Core implementation parameters used in the final experiment.}
-\label{tab:implementation}
+\caption{Phase-II link parameters used for the final experiment.}
+\label{tab:hyperparameters}
 \begin{tabular}{p{0.48\textwidth} p{0.34\textwidth}}
 \toprule
 \textbf{Parameter} & \textbf{Value}\\
 \midrule
-Candidate formats & BPSK, QPSK, 8-PSK, 16-QAM\\
+Modulation formats & BPSK, QPSK, 8-PSK, 16-QAM\\
 Symbols per frame & 256\\
 SNR range & $-4$ to $16$ dB\\
-SNR step & 2 dB\\
+SNR increment & 2 dB\\
 Frames per SNR & 200\\
 Random seed & 42\\
-Channel & Block Rayleigh fading plus AWGN\\
-Carrier impairments & Random phase and frequency offset\\
-Synchronization & Pilot-assisted simulation estimate\\
-Primary outputs & BER, SER, decision accuracy, packet success, throughput\\
+Channel & Block Rayleigh fading and AWGN\\
+Carrier impairments & Phase and frequency offset\\
+Correction & Pilot-assisted simulation estimate\\
+Estimator & Penalized nearest-constellation distance\\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\section{Parameter Selection}
-The frame length of 256 symbols is large enough to expose packet-level
-failure while keeping the experiment computationally practical. The
-$-4$~dB to $16$~dB range includes a low-SNR ambiguity region and a high-SNR
-operating region. Two-decibel spacing provides a readable performance curve
-without hiding the transition between these regions. Two hundred frames per
-point gives a stable engineering estimate for the report while retaining
-reproducibility on a standard workstation.
+\section{Evaluation Metrics}
+Five primary metrics are calculated. BER counts erroneous bits, SER counts
+erroneous symbols, and modulation-decision accuracy counts correct format
+estimates. Packet success requires every bit in a frame to be correct.
+Effective throughput weights the bits-per-symbol value of each successful
+frame by its packet-success indicator. These metrics are reported together
+because no single value captures the complete receiver behavior.
 
-\section{Generated Deliverables}
-The experiment produces a numerical JSON record and a communication-results
-figure. The report package also contains the architecture diagram, parameter
-summary, comparison figure, source modules, experiment scripts, tests, and
-the exact style-file dependency used by the title pages. The archive is
-organized at its root so that \texttt{MainFile.tex} can be uploaded directly
-to Overleaf.
+\section{Experimental Procedure}
+At each SNR, the experiment generates 200 frames. For every frame it
+selects a modulation, creates bits, maps them to symbols, applies the channel,
+corrects the received sequence, estimates the modulation, demodulates the
+symbols, and calculates errors. The same transmitted frame is also processed
+by the fixed-QPSK reference. Aggregate arrays are saved before figures are
+created.
+
+\section{Verification}
+Automated tests cover clean modulation round trips, validation of invalid
+inputs, deterministic data handling, and clean constellation identification.
+The final package is checked for balanced LaTeX environments, existing
+figure references, required style dependencies, and a valid ZIP archive.
+These checks supplement the numerical experiment and reduce documentation
+errors.
 
 \section{Reproducibility Record}
-The seed, modulation list, SNR list, frame count, and output metrics are
-stored in the result manifest. Re-running the same experiment should preserve
-the shape of every result array and produce comparable values. This record
-also prevents a figure from being disconnected from the experiment that
-generated it.
-
-\section{Practical Reproduction Sequence}
-The complete reproduction sequence is: prepare the Python environment,
-execute the Phase-II link experiment, retain the generated JSON record,
-regenerate the figures from that record, and compile the report package in
-Overleaf. No program command is embedded in the report chapters; the
-repository scripts and README provide the operational details separately.
-
-\section{Test Coverage}
-Automated tests cover clean modulation round trips, validation of invalid
-inputs, deterministic split behavior in the data utilities, and modulation
-estimation on clean constellations. These tests do not replace the SNR sweep;
-they verify the reusable pieces on which the final communication experiment
-depends.
+The JSON result record is the authoritative numerical source for the report.
+It stores the seed, frame count, SNR list, modulation list, adaptive metrics,
+and fixed-QPSK metrics. The PNG figures are generated from this record, so
+rounded values shown in tables do not alter the underlying experiment.
 
 \chapter{Results and Discussion}
 
+\section{Training Dynamics}
+Phase II is evaluated as a communication-link experiment rather than as a
+new supervised training run. Consequently, the primary result is the
+SNR-dependent receiver behavior, not a new training-loss curve. The retained
+recognition baseline motivates the AMC function, while the new evidence is
+the measured relationship between modulation selection, bit recovery, packet
+success, and throughput.
+
 \section{Overall Communication Performance}
-The adaptive receiver exhibits two operating regions. From $-4$ to 8~dB,
-constellation ambiguity and channel noise make modulation decisions
-unreliable. From 10~dB onward, the decision accuracy becomes very high and
-the BER and SER decrease sharply. This transition is the principal Phase-II
-result because it shows how recognition uncertainty affects actual
-information recovery.
+The adaptive receiver has two operating regions. From $-4$ to approximately
+8 dB, noise and fading make the four constellations difficult to distinguish.
+From 10 dB onward, the modulation decision becomes reliable and the BER and
+SER decrease sharply. This transition is the most important Phase-II result
+because it exposes the operating limit of the complete communication chain.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.91\linewidth]{artifacts/phase2-link-results.png}
-\caption{Measured Phase-II BER, SER, decision accuracy, packet success, and throughput.}
-\label{fig:linkresults}
+\caption{BER, SER, decision accuracy, packet success, and throughput of the adaptive receiver.}
+\label{fig:results}
 \end{figure}
 
-\section{Selected Numerical Results}
+\section{SNR-Wise Performance}
 \begin{table}[H]
 \centering
 \small
-\caption{Selected measured results from the final Phase-II experiment.}
-\label{tab:selectedresults}
+\caption{Selected SNR-wise results from the final Phase-II experiment.}
+\label{tab:snrresults}
 \begin{tabular}{c c c c c c}
 \toprule
 \textbf{SNR} & \textbf{BER} & \textbf{SER} & \textbf{Decision} &
@@ -621,213 +716,207 @@ information recovery.
 \end{tabular}
 \end{table}
 
-\section{High-SNR Operating Point}
-At 16~dB, every modulation decision in the reported aggregate run is
-correct. The remaining 0.095\% BER and 0.172\% SER are caused by residual
-noise and the strict symbol decisions within correctly selected
-constellations. Packet success is 75.5\%, which is lower than one minus BER
-because a packet is declared successful only when all bits in its 256-symbol
-frame are correct. The effective throughput reaches 1.888 bits/symbol because
-successful frames contribute according to their modulation order.
+At 10 dB, the decision accuracy is already 99.5\%, but BER remains 4.69\%.
+This demonstrates that correct modulation identification does not guarantee
+correct symbol decisions. At 12 dB, BER decreases to 1.85\% and packet
+success increases to 54.5\%. At 16 dB, the adaptive receiver enters its
+most reliable measured operating point.
 
-\section{Transition Region}
-At 10~dB, decision accuracy is already 99.5\%, but BER remains 4.69\% and
-packet success is only 49.0\%. This difference is important: an accurate
-format decision does not guarantee error-free communication. The receiver
-can identify the correct constellation while noise still moves individual
-symbols across decision boundaries. At 12~dB, the lower BER of 1.85\% and
-higher packet success of 54.5\% show the beginning of the reliable operating
-region.
+\section{High-SNR Performance}
+At 16 dB, measured BER is 0.095\% and SER is 0.172\%, with 100\%
+modulation-decision accuracy. Packet success is 75.5\% because a packet
+fails when any bit in its 256-symbol frame is incorrect. Effective
+throughput reaches 1.888 bits/symbol because successful frames contribute
+according to their modulation order.
 
-\section{Low-SNR Failure Behavior}
-At low SNR, the adaptive BER is approximately 0.71 at $-4$~dB and remains
-above 0.50 through 8~dB. Decision accuracy is close to the four-format
-random-choice level in the lowest region. This is not a hidden software
-failure; it is the measured limit of constellation recognition under the
-selected channel and estimator. It identifies where confidence thresholds,
-fallback to a robust modulation, coding, or retransmission would be useful.
+\section{Low-SNR Performance}
+At $-4$ dB, adaptive BER is approximately 0.710 and modulation-decision
+accuracy is 22.5\%. Through 8 dB, the estimator remains uncertain and packet
+success is zero or low. This region is valuable for analysis because it
+reveals where an adaptive receiver needs a confidence threshold, fallback to
+a robust modulation, error-control coding, or retransmission.
 
-\section{Adaptive and Fixed-Receiver Comparison}
-The fixed-QPSK reference maintains BER between approximately 0.57 and 0.65
-over most of the sweep because it is mismatched to BPSK, 8-PSK, and 16-QAM
-frames. In contrast, the adaptive receiver improves rapidly after the
-decision transition and reaches 0.000948 BER at 16~dB. The comparison
-demonstrates the practical value of receiver adaptation rather than merely
-showing that a classifier can identify a label.
+\section{Comparison with Fixed QPSK}
+The fixed-QPSK receiver maintains BER between approximately 0.57 and 0.65
+over much of the sweep because it is mismatched to BPSK, 8-PSK, and 16-QAM
+frames. The adaptive receiver improves rapidly after the modulation
+decision transition and reaches 0.000948 BER at 16 dB. This comparison
+shows that the Phase-II contribution is receiver adaptation, not merely a
+change in how a label is reported.
 
-\section{Error Sources}
-Three error sources dominate the measured behavior. First, noise causes
-constellation overlap and increases estimator ambiguity. Second, fading
-changes the received amplitude and can reduce the effective SNR of a frame.
-Third, residual correction error moves points across decision boundaries even
-when the modulation format is selected correctly. Packet success combines
-all of these effects and is therefore a strict end-to-end measure.
+\section{Error Analysis and Observations}
+Three error sources dominate the results. First, noise causes constellation
+overlap and estimator ambiguity. Second, fading changes the received
+amplitude and effective SNR from frame to frame. Third, residual correction
+error moves points across decision boundaries even when the modulation
+decision is correct. Packet success combines all of these effects and is
+therefore stricter than BER or SER.
 
-\section{Engineering Significance}
-The most important result is the change in evaluation perspective. The
-receiver is not assessed only by whether it names a waveform. It is assessed
-by whether the decision configures a useful demodulator and delivers
-information. The Phase-II implementation therefore provides a more complete
-engineering argument for adaptive communication than a standalone
-classification figure.
+\section{Practical Considerations}
+The current system is suitable for algorithm verification and controlled
+comparison. A real receiver must estimate channel and carrier parameters
+from noisy pilots, handle timing uncertainty, and process samples under
+latency and memory constraints. The estimator can later be replaced by a
+trained CNN, but the communication metrics should remain because they
+measure the usefulness of the recognition decision.
 
 \section{Limitations of the Results}
-The synchronization estimate is pilot-assisted within the simulation and is
-more controlled than an over-the-air receiver. The estimator is
-constellation-based and is not yet the trained CNN operating online. The
-experiment is uncoded, uses a flat block-fading model, and does not include
-timing recovery, pulse shaping, multipath, Doppler, or hardware
-nonlinearity. These limitations are explicitly retained so that the reported
-numbers are not presented as SDR measurements.
+The experiment uses pilot-assisted simulation correction, flat block fading,
+an uncoded link, and a constellation-distance estimator. It does not include
+pulse shaping, timing recovery, frequency-selective multipath, Doppler,
+oscillator phase noise, nonlinear amplification, or over-the-air hardware.
+The numerical results should therefore be interpreted as a reproducible
+Phase-II software baseline.
 
 \chapter{Conclusion and Future Work}
 
 \section{Conclusion}
-This report developed and evaluated a complete Phase-II adaptive digital
-communication receiver. The system generates information bits, supports
-BPSK, QPSK, 8-PSK, and 16-QAM, applies block-Rayleigh fading and AWGN with
-carrier impairments, performs pilot-assisted correction, estimates the
-modulation, selects a demodulator, and evaluates recovered information.
+This project developed a complete Phase-II adaptive digital communication
+receiver. The system generates information bits, supports four modulation
+formats, models channel and carrier impairments, corrects the received
+sequence, estimates the modulation, selects a demodulator, and evaluates
+recovered information through communication metrics.
 
-The final experiment demonstrates a clear SNR-dependent operating region.
-At 16~dB, the receiver achieves 0.095\% BER, 0.172\% SER, 100\% decision
-accuracy, 75.5\% packet success, and 1.888 bits/symbol throughput. At
-10~dB, the 99.5\% decision accuracy but 4.69\% BER shows why communication
-quality must be measured after the decision rather than inferred from it.
+The final experiment shows a clear SNR-dependent operating region. At
+16 dB, the adaptive receiver achieves 0.095\% BER, 0.172\% SER, 100\%
+decision accuracy, 75.5\% packet success, and 1.888 bits/symbol throughput.
+The difference between 99.5\% decision accuracy and 4.69\% BER at 10 dB
+also demonstrates why end-to-end communication evaluation is necessary.
 
-\section{Phase-II Contributions}
-The completed work contributes a transmitter--channel--receiver architecture,
-four modulation formats, configurable channel impairments, synchronization
-and equalization, interpretable modulation estimation, adaptive
-demodulation, a fixed-QPSK reference, reproducible metrics, figures, tests,
-and an Overleaf-ready report package. These elements make the new phase
-visibly different from a classification-only experiment.
+\section{Contributions}
+\begin{itemize}
+\item Designed a transmitter--channel--receiver Phase-II architecture.
+\item Implemented BPSK, QPSK, 8-PSK, and 16-QAM symbol processing.
+\item Added block-Rayleigh fading, AWGN, phase offset, and frequency offset.
+\item Implemented correction, constellation estimation, and adaptive
+      demodulation.
+\item Added a fixed-QPSK reference for system-level comparison.
+\item Evaluated BER, SER, decision accuracy, packet success, and throughput.
+\item Created a reproducible result record, figures, tests, and report package.
+\end{itemize}
 
 \section{Limitations}
-The current system is a controlled software simulation. It uses
-pilot-assisted correction, an uncoded link, flat block fading, and a
-constellation-distance estimator. It does not yet include a complete timing
-loop, a learned classifier in the live receiver path, forward-error
-correction, or over-the-air measurement.
+The present receiver is a controlled simulation with pilot-assisted
+correction and no error-control coding. It does not yet include a complete
+timing loop, online CNN inference, multipath, Doppler, or SDR measurements.
+These limitations define the boundary of the current claims rather than
+invalidating the measured software comparison.
 
 \section{Future Work}
-Future work should first implement timing recovery, carrier recovery, and
-channel estimation using noisy pilots. The online estimator can then be
-replaced or supplemented with a trained CNN and a confidence score. A
-confidence-aware policy could select a robust fallback modulation or request
-retransmission when the decision margin is small. Coding, interleaving,
-frequency-selective multipath, Doppler, oscillator phase noise, nonlinear
-amplification, and SDR experiments should then be added in stages.
+The next stage should implement noisy-pilot timing and carrier recovery,
+replace the controlled correction with a practical channel estimator, and
+connect the learned classifier to the live receiver path. Confidence-aware
+fallback, coding, interleaving, retransmission, frequency-selective
+channels, Doppler, oscillator phase noise, and nonlinear RF effects should
+then be evaluated. Finally, the complete system should be tested on an SDR
+using recorded and over-the-air signals.
 
+\clearemptydoublepage
 \appendix
-\chapter{Phase-II Parameter and Result Record}
+\chapter{Modulation Class Descriptions}
 
-\section{Fixed Experiment Parameters}
-\begin{longtable}{p{0.48\textwidth} p{0.36\textwidth}}
-\caption{Complete fixed parameter record for the Phase-II experiment.}
-\label{tab:appendixparameters}\\
-\toprule
-\textbf{Parameter} & \textbf{Value}\\
-\midrule
-\endfirsthead
-\toprule
-\textbf{Parameter} & \textbf{Value}\\
-\midrule
-\endhead
-Candidate modulation formats & BPSK, QPSK, 8-PSK, 16-QAM\\
-Symbols per frame & 256\\
-SNR values & $-4,-2,0,2,4,6,8,10,12,14,16$ dB\\
-Frames per SNR & 200\\
-Random seed & 42\\
-Channel model & Block Rayleigh fading and AWGN\\
-Carrier model & Random phase and frequency offset\\
-Receiver correction & Pilot-assisted simulation estimate\\
-Estimator & Penalized nearest-constellation distance\\
-Primary output & BER, SER, decision accuracy\\
-Packet output & Packet success and effective throughput\\
-\bottomrule
-\end{longtable}
-
-\section{Measured Operating Points}
+\section{Summary of Modulation Characteristics}
 \begin{table}[H]
 \centering
 \small
-\caption{Measured operating points retained in the result record.}
-\label{tab:appendixresults}
-\begin{tabular}{c c c c c c}
+\caption{Modulation classes used by the Phase-II communication link.}
+\label{tab:appendixmodulation}
+\begin{tabular}{p{0.22\textwidth} p{0.22\textwidth} p{0.38\textwidth}}
 \toprule
-\textbf{SNR} & \textbf{BER} & \textbf{SER} & \textbf{Decision} &
-\textbf{Packet} & \textbf{Throughput}\\
+\textbf{Class} & \textbf{Bits/symbol} & \textbf{Description}\\
 \midrule
-10 dB & 4.69\% & 6.94\% & 99.5\% & 49.0\% & 1.225\\
-12 dB & 1.85\% & 3.05\% & 100.0\% & 54.5\% & 1.363\\
-14 dB & 0.56\% & 1.00\% & 100.0\% & 57.0\% & 1.425\\
-16 dB & 0.095\% & 0.172\% & 100.0\% & 75.5\% & 1.888\\
+BPSK & 1 & Two opposite phase states; robust and low-rate.\\
+QPSK & 2 & Four phase states; balanced robustness and rate.\\
+8-PSK & 3 & Eight phase states; higher rate and smaller phase separation.\\
+16-QAM & 4 & Amplitude and phase states; high rate and higher sensitivity.\\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\section{Interpretation of the Record}
-The result record is the authoritative numerical source for the Phase-II
-figures. The plotted curves are generated from the complete SNR arrays, while
-the table above lists representative operating points for readability.
-Keeping the full record prevents rounding in the report from changing the
-experiment's conclusions.
+\section{Communication-Metric Definitions}
+\begin{tabular}{p{0.28\textwidth} p{0.54\textwidth}}
+\toprule
+\textbf{Metric} & \textbf{Meaning in this project}\\
+\midrule
+BER & Fraction of recovered bits that differ from transmitted bits.\\
+SER & Fraction of recovered symbols that differ from transmitted symbols.\\
+Decision accuracy & Fraction of frames with the correct modulation estimate.\\
+Packet success & Fraction of frames with every bit recovered correctly.\\
+Throughput & Successful information bits per transmitted symbol.\\
+\bottomrule
+\end{tabular}
 
-\chapter{Reproducibility and Package Contents}
+\chapter{Project Workflow Summary}
 
-\section{Repository Components}
-The repository is organized into communication modules, experiment drivers,
-tests, generated artifacts, and report files. The communication module
-contains the modulation, channel, estimator, equalizer, and demodulation
-logic. The experiment driver stores the full result arrays. The figure
-utilities create the report graphics from those arrays. The test suite checks
-the reusable mathematical components.
+\section{Phase-II Workflow}
+The project workflow consists of system definition, constellation
+construction, channel modelling, receiver correction, modulation estimation,
+adaptive demodulation, metric calculation, and result interpretation. Each
+stage is separated so that the receiver can later be connected to an SDR
+front-end or a learned online classifier.
 
-\section{Reproduction Record}
-The experiment is reproducible when the documented environment, seed, SNR
-list, frame count, modulation set, and channel parameters are retained. The
-result JSON, PNG figures, and parameter manifest are included in the package
-so that a panel member can inspect both the numerical and visual outputs.
+\begin{enumerate}
+\item Define the four modulation formats and normalized constellations.
+\item Generate random bits and map them to symbols.
+\item Apply block-Rayleigh fading, AWGN, phase offset, and frequency offset.
+\item Correct the simulated carrier and channel effects.
+\item Estimate the modulation using penalized constellation distance.
+\item Demodulate using the selected format and recover the bits.
+\item Calculate BER, SER, packet success, throughput, and decision accuracy.
+\item Store the complete numerical record and generate report figures.
+\item Verify the implementation with automated tests and package checks.
+\end{enumerate}
 
-\section{Report Package Contents}
-The Overleaf archive contains the single-file report, the corrected SVNIT
-style file, the logo, the required empty style dependency, all referenced
-Phase-II figures, numerical JSON records, source modules, experiment
-utilities, and tests. All files are placed without an extra enclosing folder,
-so the main TeX file and style file are visible immediately after upload.
+\section{Reproducibility Record}
+The fixed seed is 42, the frame length is 256 symbols, the SNR values run
+from $-4$ to $16$ dB in 2 dB steps, and 200 frames are evaluated at every
+point. The JSON result record contains the complete arrays used in the
+figures. The archive also contains the report source, style dependency,
+architecture figure, result figure, communication module, experiment driver,
+and tests.
 
 \section{Evaluation Checklist}
 \begin{itemize}
-\item The title page identifies the work as a Project Phase-II Report.
-\item The certificate identifies a Phase-II evaluation and academic year
-      2026--27.
-\item Student names and roll numbers are listed in increasing roll-number
-      order.
-\item Chapters 1--8 describe the Phase-II receiver rather than reproducing
-      the earlier classification report.
-\item Chapters 6 and 7 contain no executable command blocks.
-\item Appendix A contains parameters and measured values, not program code.
-\item Appendix B describes reproducibility and package contents.
-\item Every figure referenced by the report is included in the archive.
+\item Title and certificate pages identify the work as Phase-II.
+\item Academic year is 2026--27 and student roll numbers are increasing.
+\item Preliminary pages follow the supplied Phase-I report sequence.
+\item Chapters use the same eight chapter names and professional structure.
+\item Core chapters contain expanded theory, methodology, setup, and results.
+\item Appendix A contains technical modulation and metric descriptions.
+\item Appendix B contains workflow and reproducibility information.
+\item References are presented as a final bibliography section.
 \end{itemize}
 
+\renewcommand{\bibname}{Bibliography}
 \StartRef
-\clearemptydoublepage
 \begin{thebibliography}{99}
+
+\bibitem{haykin2005cognitive}
+S. Haykin, ``Cognitive radio: Brain-empowered wireless communications,''
+\textit{IEEE Journal on Selected Areas in Communications}, vol. 23, no. 2,
+pp. 201--220, 2005.
 
 \bibitem{proakis2008digital}
 J. G. Proakis and M. Salehi, \textit{Digital Communications}, 5th ed.,
 McGraw-Hill, 2008.
 
-\bibitem{goldsmith2005wireless}
-A. Goldsmith, \textit{Wireless Communications}, Cambridge University Press,
-2005.
+\bibitem{sklar2001digital}
+B. Sklar, \textit{Digital Communications: Fundamentals and Applications},
+2nd ed., Prentice Hall, 2001.
 
 \bibitem{azzouznandi1996}
 E. E. Azzouz and A. K. Nandi,
 \textit{Automatic Modulation Recognition of Communication Signals},
 Springer, 1996.
+
+\bibitem{gardner1988}
+W. A. Gardner, ``Signal interception: A unifying theoretical framework for
+feature detection,'' \textit{IEEE Transactions on Communications}, vol. 36,
+no. 8, pp. 897--906, 1988.
+
+\bibitem{oshea2016dataset}
+T. J. O'Shea and N. West, ``Radio machine learning dataset generation with
+GNU Radio,'' in \textit{Proceedings of the GNU Radio Conference}, 2016.
 
 \bibitem{oshea2016convolutional}
 T. J. O'Shea and J. Corgan, ``Convolutional radio modulation recognition
@@ -838,6 +927,23 @@ Communications Workshop}, 2016.
 T. J. O'Shea, K. Karhan, and T. C. Clancy, ``Over-the-air deep learning
 based radio signal classification,'' in \textit{IEEE International
 Conference on Sensing, Communication and Networking}, 2016.
+
+\bibitem{rajendran2018}
+S. Rajendran \textit{et al.}, ``Deep learning models for wireless signal
+classification with distributed low-cost spectrum sensors,''
+\textit{IEEE Transactions on Cognitive Communications and Networking}, 2018.
+
+\bibitem{lecun1998}
+Y. LeCun, L. Bottou, Y. Bengio, and P. Haffner, ``Gradient-based learning
+applied to document recognition,'' \textit{Proceedings of the IEEE}, 1998.
+
+\bibitem{goodfellow2016dl}
+I. Goodfellow, Y. Bengio, and A. Courville, \textit{Deep Learning},
+MIT Press, 2016.
+
+\bibitem{pytorchdocs}
+PyTorch, ``PyTorch documentation.'' [Online]. Available:
+\url{https://pytorch.org/docs/}
 
 \end{thebibliography}
 
