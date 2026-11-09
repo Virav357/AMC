@@ -1,104 +1,77 @@
-\chapter{Communication Theory and System Model}
+\chapter{Theory and Proposed System}
 
-\section{Complex Baseband Representation}
-The passband signal received by a digital receiver is commonly converted to
-complex baseband form:
+\section{Complex Baseband Model}
+The received signal is represented as
 \begin{equation}
 r[n] = I[n] + jQ[n],
 \end{equation}
-where $I[n]$ and $Q[n]$ are the in-phase and quadrature components. This
-representation preserves amplitude and phase information while allowing
-digital signal processing at a lower sampling rate.
-
-For a transmitted symbol sequence $x[n]$, a simplified discrete-time channel
-model is
+where $I[n]$ and $Q[n]$ are the in-phase and quadrature components. For a
+transmitted symbol $x[n]$, the Phase 2 channel is modeled as
 \begin{equation}
-y[n] = h[n]x[n]e^{j(2\pi \Delta f n+\phi)} + w[n],
+y[n] = h x[n]e^{j(2\pi\Delta f n+\phi)} + w[n],
 \end{equation}
-where $h[n]$ is the complex channel coefficient, $\Delta f$ is the
-normalized frequency offset, $\phi$ is the carrier phase offset, and $w[n]$
-is complex AWGN. In the Phase 2 experiment, $h[n]$ is constant over one
-frame and changes independently between frames, which models block
-Rayleigh fading.
+where $h$ is a block-Rayleigh coefficient, $\Delta f$ is frequency offset,
+$\phi$ is phase offset, and $w[n]$ is complex AWGN.
 
 \section{Digital Modulation}
-Digital modulation maps groups of binary information bits to complex
-constellation points. BPSK uses two phase states and carries one bit per
-symbol. QPSK uses four phase states and carries two bits per symbol. 8-PSK
-carries three bits per symbol, while normalized 16-QAM uses sixteen
-amplitude-phase combinations and carries four bits per symbol.
+The transmitter supports BPSK, QPSK, 8-PSK, and 16-QAM. These formats carry
+one, two, three, and four bits per symbol, respectively. Higher-order
+constellations provide greater spectral efficiency but have smaller decision
+regions and are more sensitive to noise and channel distortion.
 
-The number of bits per symbol affects both spectral efficiency and noise
-vulnerability. Higher-order constellations transmit more information in each
-symbol but have smaller decision regions. The adaptive receiver must
-therefore select the correct constellation before demodulation.
+\section{Phase 1 Baseline}
+Phase 1 uses RadioML 2016.10a, containing 11 modulation classes and 128
+complex samples per example. The input is a $(2,128)$ I/Q tensor. Each
+example is power-normalized and split into 70\% training, 15\% validation,
+and 15\% testing subsets using deterministic stratification.
 
-\section{Noise and Fading}
-For AWGN, the received sample is the transmitted sample plus a complex
-Gaussian random variable:
-\begin{equation}
-w[n] \sim \mathcal{CN}(0,\sigma_w^2).
-\end{equation}
-The noise power is selected from the desired SNR:
-\begin{equation}
-\sigma_w^2 = \frac{P_s}{10^{\mathrm{SNR}_{dB}/10}},
-\end{equation}
-where $P_s$ is the received signal power.
+\section{Phase 2 System Architecture}
+The new Phase 2 system is a complete transmitter--channel--receiver chain:
+\begin{enumerate}
+\item generate random information bits;
+\item map bits to a selected modulation constellation;
+\item apply Rayleigh fading, AWGN, phase offset, and frequency offset;
+\item synchronize and equalize the received symbols;
+\item estimate the modulation and select a demodulator;
+\item recover bits and calculate BER, SER, packet success, and throughput.
+\end{enumerate}
 
-Rayleigh fading is appropriate when a dominant line-of-sight path is absent.
-The block coefficient used in the simulation is generated as
-\begin{equation}
-h = \frac{h_I+jh_Q}{\sqrt{2}},
-\quad h_I,h_Q \sim \mathcal{N}(0,1).
-\end{equation}
-The receiver applies the known frame-level channel estimate for equalization:
-\begin{equation}
-\hat{x}[n] = \frac{y[n]}{h}.
-\end{equation}
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{artifacts/phase2-system-architecture.png}
+\caption{Phase 2 adaptive communication receiver architecture.}
+\label{fig:architecture}
+\end{figure}
 
-\section{Carrier Phase and Frequency Offset}
-Carrier mismatch rotates the received constellation. In the simulation, the
-combined impairment is represented by
+\section{Adaptive Modulation Mechanism}
+After synchronization, the received constellation is normalized and compared
+against candidate constellations. For each candidate, the average nearest
+constellation distance is calculated over a phase grid. A small complexity
+penalty discourages unnecessarily large constellations. The selected
+modulation is
 \begin{equation}
-c[n] = e^{j(\phi+2\pi\Delta f n)}.
+\hat{m} =
+\arg\min_m\left[
+\frac{1}{N}\sum_{n=1}^{N}
+\min_{a\in\mathcal{C}_m}|z[n]e^{-j\theta}-a|^2
+\lambda\log_2|\mathcal{C}_m|
+\right].
 \end{equation}
-The received signal is corrected using the pilot-assisted estimate available
-to the simulation receiver. This design allows the experiment to focus on the
-new AMC-to-demodulator control mechanism while preserving a realistic
-communication impairment model.
+The selected result controls the demodulator. This is the central difference
+from Phase 1: classification is connected to receiver operation.
 
-\section{Evaluation Metrics}
-\subsection{Bit Error Rate}
-Bit error rate measures the fraction of incorrectly recovered bits:
+\section{Communication Metrics}
+The bit error rate and symbol error rate are
 \begin{equation}
-\mathrm{BER} = \frac{N_{\mathrm{bit,error}}}{N_{\mathrm{bit,total}}}.
+\mathrm{BER}=\frac{N_{\mathrm{bit,error}}}{N_{\mathrm{bit,total}}},
+\qquad
+\mathrm{SER}=\frac{N_{\mathrm{symbol,error}}}{N_{\mathrm{symbol,total}}}.
 \end{equation}
+Packet success requires every bit in a frame to be recovered correctly. The
+effective throughput is the average bits per symbol weighted by packet
+success.
 
-\subsection{Symbol Error Rate}
-Symbol error rate measures the fraction of incorrect constellation decisions:
-\begin{equation}
-\mathrm{SER} = \frac{N_{\mathrm{symbol,error}}}{N_{\mathrm{symbol,total}}}.
-\end{equation}
-
-\subsection{Packet Success and Throughput}
-A packet is counted as successful only when all bits in the frame are
-recovered correctly. The packet success rate is
-\begin{equation}
-P_{\mathrm{success}} =
-\frac{N_{\mathrm{successful\ packets}}}{N_{\mathrm{transmitted\ packets}}}.
-\end{equation}
-The reported effective throughput is the average modulation order weighted by
-packet success:
-\begin{equation}
-T_{\mathrm{eff}} =
-\left(\frac{1}{M}\sum_{m=1}^{M}b_m\right)P_{\mathrm{success}},
-\end{equation}
-where $b_m$ is the number of bits per symbol for modulation $m$.
-
-\section{Phase 1 and Phase 2 Distinction}
-Phase 1 evaluates whether a CNN can classify a labeled I/Q window. Phase 2
-evaluates whether modulation information can be used in a digital link. The
-first is a recognition problem; the second is a physical-layer receiver
-problem. Consequently, Phase 2 includes transmitter generation, channel
-impairments, synchronization, equalization, adaptive demodulation, and
-information-recovery metrics.
+\section{Fixed Receiver Comparison}
+The adaptive receiver is compared with a receiver fixed to QPSK. The fixed
+receiver uses one demodulator for every frame, whereas the adaptive receiver
+selects BPSK, QPSK, 8-PSK, or 16-QAM from the received signal.

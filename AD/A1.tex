@@ -1,0 +1,29 @@
+\chapter{Source Code and Reproducibility}
+
+\section{Repository Code}
+The complete implementation is maintained with the report repository:
+\begin{itemize}
+\item \texttt{src/amc/model.py} contains the Phase 1 CNN.
+\item \texttt{src/amc/data.py} contains dataset preparation.
+\item \texttt{src/amc/communications.py} contains the Phase 2 communication
+      primitives.
+\item \texttt{scripts/train.py} and \texttt{scripts/evaluate.py} contain
+      Phase 1 training and evaluation.
+\item \texttt{scripts/run\_phase2\_link.py} runs the complete Phase 2
+      transmitter--channel--receiver simulation.
+\end{itemize}
+
+\section{Reproduction Commands}
+\begin{verbatim}
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python scripts/run_phase2_link.py --frames 200
+python scripts/build_final_report.py
+\end{verbatim}
+
+\section{Generated Files}
+The experiment writes \texttt{artifacts/phase2-link-results.png} and
+\texttt{artifacts/phase2-link-results.json}. The JSON file contains the SNR
+values, BER, SER, modulation-decision accuracy, packet success, and
+throughput used to generate the report figures.
